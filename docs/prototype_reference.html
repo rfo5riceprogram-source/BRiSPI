@@ -1,0 +1,878 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Adverse Rice Area Information Hub</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Newsreader:opsz,wght@6..72,500;6..72,600&family=Public+Sans:wght@400;500;600&display=swap">
+<style>
+/* Layout: sticky green header + pill nav; one routed page area; map page is a full card with floating layer panel; footer green. */
+:root{
+  --bg:#f2f5f0; --surface:#ffffff; --surface-2:#e7eee8; --fg:#17271f; --muted:#4a5d52; --line:#cfdad2;
+  --brand:#1e3d12; --brand-fg:#eef5f0; --brand-soft:#b9d4c4; --link:#10653f; --pill-active:#e6f0dc; --pill-active-fg:#1e3d12;
+  --warn-bg:#fff4d6; --warn-fg:#6b4a00; --ok:#1d7a46; --bad:#a63224; --focus:#b36b00;
+  --map-bg:#dfe8e1;
+  --serif:'Newsreader',Georgia,'Times New Roman',serif; --sans:'Public Sans',system-ui,-apple-system,'Segoe UI',sans-serif; --mono:'IBM Plex Mono',ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0d1914; --surface:#15261e; --surface-2:#1e3328; --fg:#e5eee8; --muted:#a4b8ab; --line:#2c4538;
+  --brand:#1e3d12; --brand-fg:#e5eee8; --brand-soft:#9cc0ab; --link:#74d19c; --pill-active:#cfe6b8; --pill-active-fg:#1e3d12;
+  --warn-bg:#3a2f0e; --warn-fg:#f2d98a; --ok:#6fd49a; --bad:#ff8f7e; --focus:#f0b35a; --map-bg:#1a2c23; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0d1914; --surface:#15261e; --surface-2:#1e3328; --fg:#e5eee8; --muted:#a4b8ab; --line:#2c4538;
+  --brand:#1e3d12; --brand-fg:#e5eee8; --brand-soft:#9cc0ab; --link:#74d19c; --pill-active:#cfe6b8; --pill-active-fg:#1e3d12;
+  --warn-bg:#3a2f0e; --warn-fg:#f2d98a; --ok:#6fd49a; --bad:#ff8f7e; --focus:#f0b35a; --map-bg:#1a2c23; color-scheme:dark}
+
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font:15px/1.55 var(--sans);margin:0}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:60;background:var(--brand)}
+h1,h2,h3{font-family:var(--serif);font-weight:600;line-height:1.15;margin:0;text-wrap:balance}
+h1{font-size:clamp(2rem,5vw,3.1rem)} h2{font-size:1.7rem} h3{font-size:1.2rem}
+p{margin:0}
+a{color:var(--link)}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
+.wrap{max-width:1180px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.muted{color:var(--muted)}
+svg.i{width:1.15em;height:1.15em;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none;vertical-align:-.2em}
+
+/* header */
+header.top{background:var(--brand);color:var(--brand-fg);position:sticky;top:env(safe-area-inset-top,0px);z-index:50}
+.top .wrap{max-width:1440px;display:flex;align-items:center;gap:16px;padding-block:12px}
+@media(max-width:1180px){.top .wrap{flex-wrap:wrap}.top .brand{white-space:normal;flex:0 1 auto;min-width:0}}
+.brand{flex:none;white-space:nowrap;display:flex;align-items:center;gap:12px;text-decoration:none;color:inherit;background:none;border:0;cursor:pointer;text-align:left;padding:0}
+.brand .logo{height:52px;width:auto;flex:none}
+.brand small.addr{text-transform:none;letter-spacing:0;font-size:.78rem;color:var(--brand-fg);opacity:.9;margin-block:1px 3px}
+.brand b{font-family:var(--serif);font-size:1.25rem;display:block;line-height:1.1;font-weight:600}
+.brand small{display:block;font-size:.74rem;letter-spacing:.08em;text-transform:uppercase;color:var(--brand-soft)}
+nav.pills{display:flex;gap:6px;overflow-x:auto;flex:1 1 auto;justify-content:flex-end;min-width:0;padding:2px}
+@media(max-width:1320px){nav.pills a svg{display:none}}
+@media(max-width:1180px){nav.pills{flex-basis:100%;justify-content:flex-start}nav.pills a svg{display:inline}}
+nav.pills a{white-space:nowrap;text-decoration:none;color:var(--brand-fg);padding:8px 12px;border-radius:999px;border:1px solid transparent;font-weight:500;font-size:.92rem;display:inline-flex;gap:8px;align-items:center}
+nav.pills a:hover{border-color:var(--brand-soft)}
+nav.pills a[aria-current="page"]{background:var(--pill-active);color:var(--pill-active-fg)}
+nav.pills a.reg{border-color:var(--brand-soft)}
+.proto{background:var(--warn-bg);color:var(--warn-fg);font-size:.84rem}
+.proto .wrap{padding-block:7px;display:flex;gap:8px;align-items:center}
+
+main{padding-block:28px 56px;display:block}
+.page-head{display:flex;flex-direction:column;gap:6px;margin-bottom:20px}
+.page-head p{color:var(--muted);max-width:68ch}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:20px}
+.grid{display:grid;gap:16px}
+.g4{grid-template-columns:repeat(auto-fit,minmax(230px,1fr))}
+.g2{grid-template-columns:repeat(auto-fit,minmax(300px,1fr))}
+.grid>*{min-width:0}
+
+/* hero */
+.hero{position:relative;overflow:hidden;border-radius:18px;display:grid;grid-template-columns:minmax(0,1fr);align-items:center;margin-bottom:28px;min-height:clamp(300px,44vw,520px);padding:clamp(20px,4vw,44px);background:var(--bg)}
+.hero::before{content:"";position:absolute;inset:0;background:url(data:image/placeholder) center 6%/cover no-repeat;opacity:.8}
+.hero::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,rgba(18,42,12,.62),rgba(18,42,12,.25) 38%,rgba(18,42,12,0) 60%),linear-gradient(to top,rgba(18,42,12,.35),rgba(18,42,12,0) 40%)}
+.hero .sun{position:absolute;left:49%;top:14%;width:min(46%,520px);aspect-ratio:1;transform:translate(-50%,-50%);border-radius:50%;background:radial-gradient(circle,rgba(255,236,190,.95) 0%,rgba(255,196,120,.55) 16%,rgba(255,160,110,.22) 38%,rgba(255,160,110,0) 68%);mix-blend-mode:screen;pointer-events:none;z-index:1;animation:sunrise 7s ease-in-out infinite alternate}
+@keyframes sunrise{from{opacity:.65;transform:translate(-50%,-50%) scale(.94)}to{opacity:1;transform:translate(-50%,-50%) scale(1.08)}}
+.hero h1{position:relative;z-index:1;align-self:start;color:#fff;max-width:18ch;text-shadow:0 2px 12px rgba(0,0,0,.45);font-size:clamp(2rem,5.5vw,3.6rem)}
+.hero>div{position:relative;background:var(--surface);border-radius:14px;padding:clamp(20px,3vw,32px);max-width:660px}
+
+.hero p.lead{font-size:1.1rem;color:var(--muted);max-width:56ch;margin-top:14px}
+.eyebrow{font-size:.74rem;letter-spacing:.12em;text-transform:uppercase;color:var(--link);font-weight:600;margin-bottom:10px}
+.cta-row{display:flex;gap:10px;flex-wrap:wrap;margin-top:22px}
+.btn{display:inline-flex;align-items:center;gap:8px;border-radius:999px;padding:10px 18px;border:1px solid var(--brand);background:var(--brand);color:var(--brand-fg);font-weight:600;cursor:pointer;text-decoration:none;font-size:.92rem}
+:root[data-theme="dark"] .btn{border-color:var(--link)}
+.btn.ghost{background:transparent;color:var(--fg);border-color:var(--line)}
+.btn.sm{padding:6px 12px;font-size:.84rem}
+.btn.danger{background:transparent;color:var(--bad);border-color:var(--bad)}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:0}
+.stat{padding:6px 16px;border-left:1px solid var(--line)}
+.stat:first-child{border-left:0;padding-left:0}
+.stat .n{font:500 2.2rem/1 var(--mono);display:block}
+.stat span.l{font-size:.82rem;color:var(--muted)}
+.feature{display:flex;flex-direction:column;gap:10px;text-decoration:none;color:inherit}
+.feature .ic{width:40px;height:40px;border-radius:12px;background:var(--surface-2);display:grid;place-items:center;color:var(--link)}
+.feature:hover{border-color:var(--link)}
+.feature p{color:var(--muted);font-size:.9rem}
+.cta-band{display:flex;gap:16px;align-items:center;justify-content:space-between;flex-wrap:wrap;background:var(--brand);color:var(--brand-fg);border-radius:16px;padding:22px 24px}
+.cta-band .btn{background:var(--brand-fg);color:var(--brand);border-color:var(--brand-fg)}
+
+/* badges + pills */
+.badge{display:inline-flex;align-items:center;gap:7px;border-radius:999px;padding:2px 10px 2px 8px;font-size:.8rem;font-weight:500;background:var(--surface-2);border:1px solid var(--line);white-space:nowrap}
+.badge i{width:10px;height:10px;border-radius:50%;display:inline-block;flex:none}
+.status{display:inline-block;border-radius:999px;padding:2px 10px;font-size:.78rem;font-weight:600;border:1px solid currentColor}
+.st-Submitted{color:var(--focus)} .st-Published{color:var(--ok)} .st-Returned{color:var(--bad)} .st-Pending{color:var(--muted)}
+.legend{display:flex;flex-wrap:wrap;gap:8px}
+
+/* forms */
+.toolbar{display:flex;flex-wrap:wrap;gap:10px;align-items:end;margin-bottom:14px}
+.field{display:flex;flex-direction:column;gap:4px;min-width:0}
+.field label,.lbl{font-size:.78rem;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--muted)}
+input[type=text],input[type=email],input[type=password],input[type=number],input[type=search],select,textarea{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:9px 12px;min-width:0;width:100%}
+select{border-radius:999px;padding-right:28px}
+input[type=search]{border-radius:999px;padding-left:38px}
+.searchbox{position:relative;flex:1 1 220px}
+.searchbox svg{position:absolute;left:13px;bottom:12px;color:var(--muted)}
+.err{color:var(--bad);font-size:.85rem;margin-top:4px}
+.ok-msg{color:var(--ok);font-size:.9rem}
+.stack{display:flex;flex-direction:column;gap:14px}
+.formgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px}
+
+/* tables */
+.tw{overflow-x:auto;border:1px solid var(--line);border-radius:14px;background:var(--surface)}
+table{border-collapse:collapse;width:100%;font-size:.9rem}
+th,td{text-align:left;padding:11px 14px;border-bottom:1px solid var(--line);vertical-align:top}
+tbody tr:last-child td{border-bottom:0}
+th{background:var(--surface-2);font-size:.76rem;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);white-space:nowrap}
+th button{all:unset;cursor:pointer;display:inline-flex;gap:6px;align-items:center;text-transform:inherit;letter-spacing:inherit;font-weight:600}
+th button:focus-visible{outline:3px solid var(--focus)}
+td.num,th.num{text-align:right}
+.pager{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-top:14px;font-size:.88rem;color:var(--muted)}
+.pager div{display:flex;gap:6px}
+.meta{display:flex;gap:16px;flex-wrap:wrap;font-size:.85rem;color:var(--muted);margin-bottom:10px}
+pre.csv{background:var(--surface-2);border-radius:12px;padding:12px;max-height:200px;overflow:auto;font:12px/1.5 var(--mono);margin:10px 0 0;white-space:pre}
+
+/* map */
+.mapcard{position:relative;border:1px solid var(--line);border-radius:16px;overflow:hidden;height:min(72vh,640px);min-height:460px;background:var(--map-bg)}
+#lmap{position:absolute;inset:0;background:var(--map-bg);z-index:1}
+.leaflet-pane,.leaflet-tile,.leaflet-marker-icon,.leaflet-tile-container,.leaflet-pane>svg,.leaflet-pane>canvas,.leaflet-layer{position:absolute;left:0;top:0}
+.leaflet-container{overflow:hidden;font-family:var(--sans)}
+.leaflet-tile{user-select:none;-webkit-user-drag:none;visibility:hidden}
+.leaflet-tile-loaded{visibility:inherit}
+.leaflet-container img.leaflet-tile{max-width:none!important;max-height:none!important}
+.leaflet-container .leaflet-overlay-pane svg{max-width:none!important;max-height:none!important}
+.leaflet-pane{z-index:400}.leaflet-tile-pane{z-index:200}.leaflet-overlay-pane{z-index:400}
+.leaflet-map-pane svg{z-index:200}
+.leaflet-zoom-animated{transform-origin:0 0}
+.leaflet-zoom-anim .leaflet-zoom-animated{transition:transform .25s cubic-bezier(0,0,.25,1)}
+.leaflet-zoom-anim .leaflet-tile,.leaflet-pan-anim .leaflet-tile{transition:none}
+.leaflet-zoom-anim .leaflet-zoom-hide{visibility:hidden}
+.leaflet-interactive{cursor:pointer}
+.leaflet-grab{cursor:grab}.leaflet-dragging .leaflet-grab{cursor:move}
+.ctrl{position:absolute;z-index:5;top:12px;right:12px;display:flex;flex-direction:column;background:var(--surface);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.ctrl button{width:40px;height:40px;border:0;background:none;cursor:pointer;display:grid;place-items:center;color:var(--fg)}
+.ctrl button+button{border-top:1px solid var(--line)}
+.layers{position:absolute;z-index:5;top:12px;left:12px;width:270px;max-height:calc(100% - 24px);overflow:auto;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:12px}
+.layers h3{font-size:1rem}
+.layers .grp{display:flex;flex-direction:column;gap:6px}
+.chk{display:flex;gap:8px;align-items:center;font-size:.88rem;cursor:pointer}
+.chk input{width:18px;height:18px;accent-color:var(--link);flex:none}
+.chk i{width:12px;height:12px;border-radius:3px;flex:none}
+.layers-toggle{display:none;position:absolute;z-index:6;left:12px;top:12px}
+.info{position:absolute;z-index:5;right:12px;bottom:28px;width:min(320px,calc(100% - 24px));background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:8px}
+.info dl{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;margin:0;font-size:.88rem}
+.info dt{color:var(--muted)} .info dd{margin:0}
+.attrib{position:absolute;z-index:4;right:0;bottom:0;background:color-mix(in srgb,var(--surface) 85%,transparent);font-size:.7rem;padding:2px 8px;border-top-left-radius:8px;color:var(--muted)}
+@media(max-width:720px){
+  .layers{top:60px;display:none;width:calc(100% - 24px)}
+  .layers.open{display:flex}
+  .layers-toggle{display:inline-flex}
+  .info{bottom:24px}
+}
+
+
+/* glance charts */
+.glance-head{display:flex;justify-content:space-between;align-items:end;gap:12px;flex-wrap:wrap;margin:8px 0 14px}
+.glance-head p{color:var(--muted);font-size:.88rem}
+.gcard{display:flex;flex-direction:column;gap:12px}
+.gcard .top{display:flex;flex-direction:column;gap:2px}
+.gcard .big{font:500 2.1rem/1.1 var(--mono);font-variant-numeric:tabular-nums}
+.seg{display:flex;flex-wrap:wrap;gap:4px}
+.seg button{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:4px 11px;font-size:.78rem;cursor:pointer;display:inline-flex;gap:5px;align-items:center}
+.seg button[aria-pressed="true"]{background:var(--pill-active);color:var(--pill-active-fg);border-color:var(--pill-active)}
+.chart{width:100%;height:auto;display:block}
+.chart text{font-family:var(--sans);fill:var(--muted);font-size:10px}
+.chart text.v{font-family:var(--mono);fill:var(--fg);font-size:9.5px}
+.chart .grid{stroke:var(--line);stroke-width:1}
+.pie{display:flex;gap:16px;align-items:center;flex-wrap:wrap}
+.pie svg{width:150px;height:150px;flex:none}
+.pie svg text{font-family:var(--mono);fill:var(--fg);font-size:13px}
+.pie ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:5px;font-size:.82rem;flex:1 1 150px;min-width:0}
+.pie li{display:flex;gap:8px;align-items:center}
+.pie li i{width:11px;height:11px;border-radius:3px;flex:none}
+.pie li span.n{margin-left:auto;font-family:var(--mono);white-space:nowrap}
+.keyrow{display:flex;flex-wrap:wrap;gap:6px 12px;font-size:.76rem;color:var(--muted)}
+.keyrow i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+.plist{display:grid;grid-template-columns:1fr auto;gap:6px 16px;margin:0;font-size:.9rem}
+.plist dt{color:var(--muted)}.plist dd{margin:0;font-family:var(--mono);text-align:right}
+.gfilters .field{flex:0 1 220px}
+.gfilters{display:flex;flex-direction:column;gap:12px;margin-bottom:16px}
+.gnote{font-size:.8rem;color:var(--muted);margin-top:8px}
+
+
+/* gallery */
+
+
+/* gallery */
+.gview{position:relative;aspect-ratio:16/9;max-height:560px;width:100%;border-radius:16px;overflow:hidden;background:var(--surface-2)}
+.gview img{width:100%;height:100%;object-fit:cover;display:block}
+.gcap{position:absolute;left:0;right:0;bottom:0;padding:36px 20px 14px;color:#fff;background:linear-gradient(to top,rgba(18,42,12,.8),rgba(18,42,12,0));display:flex;justify-content:space-between;gap:12px;font-size:.95rem}
+.gcap span.c{font-family:var(--mono);font-size:.82rem;opacity:.9;white-space:nowrap}
+.gnav{position:absolute;top:50%;transform:translateY(-50%);width:44px;height:44px;border-radius:50%;border:0;background:rgba(18,42,12,.65);color:#fff;cursor:pointer;display:grid;place-items:center}
+.gnav:hover{background:rgba(18,42,12,.85)}
+.gnav.prev{left:12px}.gnav.next{right:12px}
+.gthumbs{display:flex;gap:8px;overflow-x:auto;padding:10px 2px 4px}
+.gthumbs button{flex:none;width:96px;aspect-ratio:16/9;padding:0;border:2px solid transparent;border-radius:10px;overflow:hidden;cursor:pointer;background:none;opacity:.75}
+.gthumbs button img{width:100%;height:100%;object-fit:cover;display:block}
+.gthumbs button[aria-current="true"]{border-color:var(--link);opacity:1}
+
+
+/* pie of pie */
+.ppwrap{position:relative}
+.pp{width:100%;height:auto;display:block;max-width:760px;margin-inline:auto;overflow:visible}
+.pp text{font-family:var(--mono);font-size:15px;fill:#fff;font-weight:500;pointer-events:none;transition:opacity .18s}
+.pp .ln{stroke:var(--muted);stroke-width:1.2;fill:none}
+.pp .cap{font-family:var(--sans);fill:var(--muted);font-size:13px;font-weight:600}
+.pp .sl{cursor:pointer;transition:transform .18s ease,opacity .18s ease,filter .18s ease;outline:none}
+.pp .sl.on,.pp .sl.pin{transform:translate(var(--tx),var(--ty));filter:drop-shadow(0 3px 5px rgba(0,0,0,.35))}
+.pp .sl:focus-visible{stroke:var(--fg);stroke-width:3}
+.ppwrap.active .pp .sl:not(.on):not(.rel){opacity:.3}
+.ppwrap.active .pp text.pl:not(.on):not(.rel){opacity:.3}
+.pptip{position:absolute;z-index:5;pointer-events:none;background:var(--brand);color:var(--brand-fg);padding:6px 10px;border-radius:8px;font-size:.84rem;white-space:nowrap}
+.ppdetail{min-height:48px;display:flex;flex-wrap:wrap;align-items:center;gap:6px 14px;padding:10px 14px;border-radius:12px;background:var(--surface-2);margin-bottom:8px;font-size:.92rem}
+.ppdetail .big{font-size:1.5rem}
+.ppleg{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:6px 28px;list-style:none;margin:14px 0 0;padding:0;font-size:.9rem}
+.ppleg li{display:flex;gap:9px;align-items:center;padding:5px 6px;border-bottom:1px solid var(--line);border-radius:8px;cursor:pointer;transition:background .15s,opacity .15s}
+.ppleg li:hover,.ppleg li.on{background:var(--surface-2)}
+.ppleg li.pin{outline:2px solid var(--link);outline-offset:-2px}
+.ppleg li:focus-visible{outline:3px solid var(--focus)}
+.ppwrap.active .ppleg li:not(.on):not(.rel){opacity:.45}
+.ppleg i{width:12px;height:12px;border-radius:3px;flex:none}
+.ppleg .n{margin-left:auto;font-family:var(--mono);font-variant-numeric:tabular-nums}
+.ppleg li.tot{font-weight:600}
+@media(prefers-reduced-motion:reduce){.pp .sl.on,.pp .sl.pin{transform:none}}
+
+
+/* data dialog */
+.linkbtn{all:unset;cursor:pointer;color:var(--link);font-weight:600;display:inline-flex;gap:6px;align-items:center;border-radius:6px}
+.linkbtn:hover{text-decoration:underline}
+.linkbtn:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.linkbtn svg{width:.95em;height:.95em}
+.ov{position:fixed;inset:0;z-index:80;background:rgba(10,24,8,.6);display:grid;place-items:center;padding:16px}
+.dlg{background:var(--surface);color:var(--fg);border-radius:16px;max-width:780px;width:100%;max-height:88vh;overflow:auto;padding:20px}
+.dlg-h{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
+
+
+/* DA form dialog */
+.dlg{max-width:1020px;position:relative}
+.dlg-x{position:absolute;top:12px;right:12px;z-index:2}
+.form{color:var(--fg);font-family:var(--serif)}
+.form .lh{display:flex;gap:14px;align-items:center;margin-bottom:22px;padding-right:90px}
+.form .lh img{width:96px;height:auto;flex:none}
+.form .lh .sm{font-size:.95rem}.form .lh .b{font-size:1.15rem;font-weight:600;letter-spacing:.01em;line-height:1.25}
+.form .pt{font-family:var(--sans);font-size:.9rem;margin:0 0 18px}
+.form .mn{font-family:var(--sans);font-size:1rem;font-weight:700;margin:0 0 6px}
+.form .mn .prov{font-weight:400;color:var(--muted)}
+.fw{overflow-x:auto}
+table.ft{border:1.5px solid var(--fg);font-family:var(--sans);font-size:.85rem;min-width:760px}
+table.ft th,table.ft td{border:1px solid var(--fg);padding:8px 10px;text-align:center;vertical-align:middle;background:var(--surface);color:var(--fg);text-transform:none;letter-spacing:0;font-size:.85rem;white-space:normal}
+table.ft thead th{font-weight:700}
+table.ft .unit td{font-style:italic;font-weight:400;color:var(--fg)}
+table.ft td.no{width:56px;font-weight:600}
+table.ft .bg{text-align:left;min-width:130px}
+table.ft thead th.bg{text-align:center}
+table.ft td.num{text-align:center}
+table.ft tfoot th,table.ft tfoot td{background:color-mix(in srgb,var(--link) 20%,var(--surface));font-weight:700}
+table.ft tbody tr:last-child td{border-bottom:1px solid var(--fg)}
+.form .fn{font-family:var(--sans);font-size:.78rem;color:var(--muted);margin:10px 0 0}
+@media(max-width:560px){.form .lh{padding-right:0;flex-direction:column;align-items:flex-start;margin-top:34px}}
+
+
+/* form-style dialog */
+.dlg.form{max-width:1020px;padding:26px 28px;position:relative}
+.dlg-x{position:absolute;top:14px;right:14px}
+.formhead{display:flex;gap:16px;align-items:center;padding-right:96px}
+.formhead img{height:75px;width:auto;flex:none}
+.formhead .f1{font-family:var(--serif);font-size:.95rem}
+.formhead .f2{font-family:var(--serif);font-weight:600;font-size:1.15rem;letter-spacing:.01em}
+.formtitle{font-weight:600;font-size:.92rem;margin:22px 0 18px}
+.formmuni{font-family:var(--sans);font-size:1rem;margin-bottom:6px}
+.ftw{border-radius:0;border:0;background:none}
+.ftable{min-width:860px;border:1px solid var(--muted)}
+.ftable th,.ftable td{border:1px solid var(--muted);padding:7px 8px;font-size:.86rem}
+.ftable thead th{background:none;color:var(--fg);text-transform:none;letter-spacing:0;font-size:.86rem;text-align:center;white-space:normal;vertical-align:middle;font-weight:700}
+.ftable .fsub th{font-weight:400;font-size:.8rem;color:var(--muted);padding-block:4px}
+.ftable .fno{width:56px}.ftable .fbr{min-width:140px}
+.ftable td.fc{text-align:center}
+.ftable td.fn{text-align:center}
+.ftable tbody tr:last-child td,.ftable tbody tr:last-child th{border-bottom:1px solid var(--muted)}
+.ftable .ftot th,.ftable .ftot td{background:color-mix(in srgb,var(--link) 18%,var(--surface));color:var(--fg);font-weight:700;text-align:center;text-transform:none;letter-spacing:0}
+@media(max-width:700px){.formhead{padding-right:0;padding-top:34px}.dlg.form{padding:18px 14px}}
+
+/* practices */
+.strip{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+@media(max-width:560px){.strip{grid-template-columns:1fr}}
+.strip .card{padding:14px 16px}
+.strip .n{font:500 1.8rem/1.1 var(--mono);display:block}
+.tabs{display:flex;gap:6px;overflow-x:auto;padding:2px;margin:18px 0 14px}
+.tabs button{white-space:nowrap;border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:8px 16px;cursor:pointer;font-weight:500}
+.tabs button[aria-selected="true"]{background:var(--pill-active);color:var(--pill-active-fg);border-color:var(--pill-active)}
+.pwrap{display:grid;grid-template-columns:minmax(0,1fr) 260px;gap:16px}
+@media(max-width:900px){.pwrap{grid-template-columns:1fr}}
+ul.tips{margin:10px 0 0;padding-left:20px;display:flex;flex-direction:column;gap:8px}
+.note{display:flex;gap:8px;background:var(--warn-bg);color:var(--warn-fg);border-radius:10px;padding:8px 12px;font-size:.84rem;margin-top:12px}
+.minimap{width:100%;height:auto;display:block}
+
+/* account */
+.role-chip{display:inline-flex;gap:6px;align-items:center;font-size:.8rem;background:var(--surface-2);border-radius:999px;padding:3px 12px}
+.row-card{display:flex;gap:14px;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;border-top:1px solid var(--line);padding-block:14px}
+.row-card:first-child{border-top:0}
+.tabs2{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px}
+.quick{display:flex;flex-wrap:wrap;gap:8px}
+.toast{position:fixed;z-index:70;left:50%;transform:translateX(-50%);bottom:calc(20px + env(safe-area-inset-bottom,0px));background:var(--brand);color:var(--brand-fg);padding:10px 18px;border-radius:999px;font-size:.9rem;max-width:calc(100% - 32px)}
+footer.bot{background:var(--brand);color:var(--brand-fg);padding-block:28px calc(28px + env(safe-area-inset-bottom,0px))}
+footer.bot .wrap{display:flex;gap:24px;justify-content:space-between;flex-wrap:wrap;font-size:.88rem}
+footer.bot p{color:var(--brand-soft);max-width:46ch}
+.help{position:fixed;z-index:40;right:max(16px,env(safe-area-inset-right,0px));bottom:calc(16px + env(safe-area-inset-bottom,0px));width:44px;height:44px;border-radius:50%;border:0;background:var(--brand);color:var(--brand-fg);font-weight:700;cursor:pointer;display:none}
+@media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+
+<div class="proto"><div class="wrap"><svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg><span>Prototype. Rows are sample data, and barangay and river shapes are illustrative until official boundary files are loaded.</span></div></div>
+<header class="top"><div class="wrap">
+  <a class="brand" href="#home" aria-label="ARIAH home">
+    <img class="logo" src="data:image/placeholder" alt="Department of Agriculture Region V logo" width="62" height="55">
+    <span><small>Department of Agriculture Region 5</small><small class="addr">DA Regional Field Office V · San Agustin, Pili, Camarines Sur</small><b>Bicol Rice Stress Prone Information Hub</b></span>
+  </a>
+  <nav class="pills" id="nav" aria-label="Main"></nav>
+</div></header>
+<main class="wrap" id="app" tabindex="-1"></main>
+<footer class="bot"><div class="wrap">
+  <div><b style="font-family:var(--serif);font-size:1.1rem">ARIAH</b><p>A reference dataset of the latest DA records on flood, drought and saline-intrusion stress in Bicol rice areas. It is not a real-time monitoring system.</p></div>
+</div></footer>
+<div id="toast" class="toast" hidden role="status"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
+<script>
+(function(){
+'use strict';
+/* ---------- helpers ---------- */
+const $=(s,r=document)=>r.querySelector(s);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const IC={
+ 'chev-l':'<path d="M15 18l-6-6 6-6"/>','chev-r':'<path d="M9 18l6-6-6-6"/>',
+ home:'<path d="M3 11l9-8 9 8M5 10v10h14V10"/>',table:'<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18M9 4v16"/>',
+ map:'<path d="M9 4L3 6v14l6-2 6 2 6-2V4l-6 2-6-2zM9 4v14M15 6v14"/>',sprout:'<path d="M12 21v-9M12 12c-4 0-6-2-6-6 4 0 6 2 6 6zM12 14c0-4 2-6 6-6 0 4-2 6-6 6z"/>',
+ login:'<path d="M15 3h4a2 2 0 012 2v14a2 2 0 01-2 2h-4M10 17l5-5-5-5M15 12H3"/>',user:'<circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/>',
+ search:'<circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/>',copy:'<rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 012-2h10"/>',
+ plus:'<path d="M12 5v14M5 12h14"/>',minus:'<path d="M5 12h14"/>',locate:'<circle cx="12" cy="12" r="3"/><circle cx="12" cy="12" r="8"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/>',
+ layers:'<path d="M12 3l9 5-9 5-9-5 9-5zM3 13l9 5 9-5"/>',info:'<circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/>',
+ check:'<path d="M20 6L9 17l-5-5"/>',x:'<path d="M18 6L6 18M6 6l12 12"/>',arrow:'<path d="M5 12h14M13 6l6 6-6 6"/>',chl:'<path d="M15 6l-6 6 6 6"/>',chr:'<path d="M9 6l6 6-6 6"/>',
+ up:'<path d="M7 14l5-5 5 5"/>',down:'<path d="M7 10l5 5 5-5"/>',sort:'<path d="M8 9l4-4 4 4M16 15l-4 4-4-4"/>',file:'<path d="M14 3H7a2 2 0 00-2 2v14a2 2 0 002 2h10a2 2 0 002-2V8l-5-5zM14 3v5h5"/>',out:'<path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/>'};
+const icon=n=>`<svg class="i" viewBox="0 0 24 24" aria-hidden="true">${IC[n]||''}</svg>`;
+function rng(seed){return function(){seed|=0;seed=seed+0x6D2B79F5|0;let t=Math.imul(seed^seed>>>15,1|seed);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+const R=rng(20261019);
+function toast(m){const t=$('#toast');t.textContent=m;t.hidden=false;clearTimeout(toast.h);toast.h=setTimeout(()=>t.hidden=true,2800)}
+const today=new Date().toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
+
+/* ---------- reference data ---------- */
+const STRESS=[
+ {code:'F',label:'Flood',color:'#2b6cb0',dash:''},
+ {code:'S',label:'Saline intrusion',color:'#d9a400',dash:'2 4'},
+ {code:'D',label:'Drought',color:'#c0392b',dash:'9 4'},
+ {code:'FD',label:'Flood and drought',color:'#7b4bb7',dash:'9 4 2 4'},
+ {code:'FS',label:'Flood and saline intrusion',color:'#2f9e5b',dash:'14 3'},
+ {code:'SD',label:'Saline intrusion and drought',color:'#e07b1a',dash:'2 2 8 2'},
+ {code:'FSD',label:'Flood, saline intrusion and drought (multiple stress)',color:'#7a4a2b',dash:'1 5'}];
+const SM=Object.fromEntries(STRESS.map(s=>[s.code,s]));
+const PROVS=['Albay','Camarines Norte','Camarines Sur','Catanduanes','Masbate','Sorsogon'];
+const W={Albay:[4,1,2,2,1,.5,.5],'Camarines Norte':[3,3,1,1,2,1,1],'Camarines Sur':[5,1,2,3,1,.5,1],Catanduanes:[1,1,4,1,.5,3,.5],Masbate:[1,2,5,.5,.5,3,1],Sorsogon:[2,4,1,1,3,2,1]};
+const MUNIS_SRC={
+ Albay:[['Legazpi City',13.14,123.74],['Daraga',13.15,123.70],['Camalig',13.18,123.65],['Guinobatan',13.19,123.60],['Ligao City',13.22,123.53],['Oas',13.25,123.50],['Polangui',13.30,123.49],['Tabaco City',13.36,123.72],['Malilipot',13.31,123.73]],
+ 'Camarines Norte':[['Daet',14.11,122.96],['Labo',14.16,122.83],['Vinzons',14.17,122.91],['Talisay',14.13,122.93],['Mercedes',14.11,123.01],['Paracale',14.28,122.78]],
+ 'Camarines Sur':[['Naga City',13.62,123.19],['Pili',13.58,123.28],['Calabanga',13.71,123.22],['Bula',13.45,123.30],['Nabua',13.40,123.37],['Iriga City',13.42,123.41],['Libmanan',13.70,123.06],['Sipocot',13.77,122.98],['Milaor',13.59,123.17],['Gainza',13.60,123.15]],
+ Catanduanes:[['Virac',13.58,124.23],['Bato',13.60,124.30],['San Miguel',13.69,124.34],['Viga',13.87,124.31],['Caramoran',13.99,124.29]],
+ Masbate:[['Masbate City',12.37,123.62],['Mandaon',12.25,123.30],['Milagros',12.22,123.50],['Aroroy',12.51,123.40],['Uson',12.25,123.78],['Cataingan',12.0,123.99]],
+ Sorsogon:[['Sorsogon City',12.97,124.0],['Bulan',12.67,123.88],['Irosin',12.70,124.03],['Gubat',12.92,124.12],['Castilla',12.95,123.88],['Pilar',12.92,123.68],['Barcelona',12.87,124.14]]};
+const BRGY=['Poblacion','San Isidro','Santa Cruz','San Roque','Bagumbayan','Maligaya','San Jose','Del Rosario','Salvacion','San Vicente','Tabuco','Mabini'];
+const DB={munis:[],brgys:[],records:[],reports:[],log:[],users:[],nextR:3,nextRec:1};
+let bid=1,mid=1;
+function pick(w){let t=w.reduce((a,b)=>a+b,0)*R(),i=0;while(t>w[i]){t-=w[i];i++}return STRESS[Math.min(i,6)].code}
+function poly(lat,lng,r){const n=7,pts=[];for(let k=0;k<n;k++){const a=k/n*Math.PI*2,rr=r*(.75+R()*.5);pts.push([lat+Math.sin(a)*rr,lng+Math.cos(a)*rr*1.05])}return pts}
+PROVS.forEach(p=>MUNIS_SRC[p].forEach(([name,lat,lng])=>{
+  const m={id:mid++,prov:p,name,lat,lng};DB.munis.push(m);
+  const nb=2+(R()<.45?1:0),names=[...BRGY].sort(()=>R()-.5).slice(0,nb);
+  names.forEach(bn=>{
+    const b={id:bid++,muni:m.id,name:bn,poly:poly(lat+(R()-.5)*.14,lng+(R()-.5)*.14,.035+R()*.025)};DB.brgys.push(b);
+    const nr=R()<.4?2:1,st=pick(W[p]);
+    for(let k=0;k<nr;k++)DB.records.push({id:DB.nextRec++,brgy:b.id,stress:k?(R()<.5?st:pick(W[p])):st,area:Math.round((8+R()*420)*10)/10,season:R()<.55?'Wet':'Dry',year:2023+Math.floor(R()*3),status:'Published',report:null});
+  })}));
+DB.records.forEach(r=>{r.farmers=Math.round(r.area*(0.8+((r.id*37)%70)/100))});
+const muniById=id=>DB.munis.find(m=>m.id===id), brgyById=id=>DB.brgys.find(b=>b.id===id);
+const muniByName=n=>DB.munis.find(m=>m.name===n);
+DB.users=[
+ {email:'lgu.daraga@example.ph',pw:'demo1234',name:'Ana Reyes',role:'LGU',muni:'Daraga',status:'Approved'},
+ {email:'da.reviewer@example.ph',pw:'demo1234',name:'Jose Dizon',role:'DA',muni:null,status:'Approved'},
+ {email:'admin@example.ph',pw:'demo1234',name:'Grace Lim',role:'Admin',muni:null,status:'Approved'},
+ {email:'maria.santos@example.ph',pw:'demo1234',name:'Maria Santos',role:'LGU',muni:'Bula',status:'Pending'}];
+const pili=muniByName('Pili'), dar=muniByName('Daraga');
+DB.reports=[
+ {id:'R-001',muni:'Pili',by:'Rico Alba',at:'12 Oct 2026',status:'Submitted',items:DB.brgys.filter(b=>b.muni===pili.id).slice(0,2).map((b,i)=>({brgy:b.id,stress:i?'FD':'F',area:i?64.5:112.3,farmers:i?58:96,season:'Wet',year:2026})),files:['Pili_flood_assessment_2026.pdf'],notes:'Typhoon-related flooding, Wet season 2026.',reviewer:null,review_notes:''},
+ {id:'R-002',muni:'Daraga',by:'Ana Reyes',at:'5 Oct 2026',status:'Returned',items:DB.brgys.filter(b=>b.muni===dar.id).slice(0,1).map(b=>({brgy:b.id,stress:'D',area:48,farmers:41,season:'Dry',year:2026})),files:['Daraga_dry_spell.jpg'],notes:'',reviewer:'Jose Dizon',review_notes:'Attach the barangay-level area breakdown, then submit again.'}];
+DB.log=[{at:'5 Oct 2026',text:'R-002 returned to Daraga LGU by Jose Dizon'},{at:'12 Oct 2026',text:'R-001 submitted by Pili LGU'}];
+
+/* ---------- state ---------- */
+const S={user:null,data:{q:'',prov:'',stress:'',season:'',year:'',sort:'prov',dir:1,page:1,csv:false,open:null},
+ prac:{prov:'Albay',stress:'N',season:'Wet',tab:'Seeds'},acct:{tab:'reports',draft:[{brgy:'',stress:'F',area:'',farmers:'',season:'Wet',year:2026}],err:{},msg:'',file:''},
+ map:{prov:new Set(PROVS),stress:new Set(STRESS.map(s=>s.code)),outline:false,munis:false,basin:false,sel:null},lmap:null};
+const published=()=>DB.records.filter(r=>r.status==='Published');
+const rowOf=r=>{const b=brgyById(r.brgy),m=muniById(b.muni);return{...r,muni:m.name,brgyName:b.name,prov:m.prov}};
+const badge=c=>`<span class="badge"><i style="background:${SM[c].color}"></i>${esc(SM[c].label)}</span>`;
+const fmt=n=>n.toLocaleString('en-US',{minimumFractionDigits:1,maximumFractionDigits:1});
+
+/* ---------- router ---------- */
+const ROUTES={home:'Home',data:'Adverse Data',map:'Interactive Map',practices:'Farm Practices',account:'Login'};
+const NAVI={home:'home',data:'table',map:'map',practices:'sprout',account:'login'};
+function route(){const h=(location.hash||'#home').slice(1);return ROUTES[h]?h:'home'}
+function render(){
+  const r=route();
+  if(S.lmap){S.lmap.remove();S.lmap=null}
+  $('#nav').innerHTML=Object.keys(ROUTES).map(k=>{const label=k==='account'?(S.user?'My account':'Login'):ROUTES[k];return `<a href="#${k}" ${k===r?'aria-current="page"':''}>${icon(NAVI[k])}${label}</a>`}).join('')+(S.user?'':`<a href="#account" class="reg" data-act="goreg">${icon('user')}Register as LGU</a>`);
+  $('#app').innerHTML=VIEWS[r]();
+  AFTER[r]&&AFTER[r]();
+}
+addEventListener('hashchange',()=>{render();scrollTo(0,0)});
+
+/* ---------- Home ---------- */
+const VIEWS={};const AFTER={};
+
+/* ---------- Home charts ---------- */
+const PHYS={Albay:52000,'Camarines Norte':14500,'Camarines Sur':138000,Catanduanes:11800,Masbate:24500,Sorsogon:29800};
+const FARM={Albay:61000,'Camarines Norte':17200,'Camarines Sur':152000,Catanduanes:15300,Masbate:28400,Sorsogon:34900};
+const PSHORT={Albay:'Albay','Camarines Norte':'C. Norte','Camarines Sur':'C. Sur',Catanduanes:'Catand.',Masbate:'Masbate',Sorsogon:'Sorsogon'};
+const PCOL=['#1e7a4d','#d98a1c','#3d8fd1','#8a5fc4','#c0563f','#5a8a2e'];
+const HOME={physical:'bar',affected:'hbar',farmers:'bar',group:'prov'};
+const CTYPES=[['bar','Bar'],['hbar','Horizontal'],['line','Line'],['donut','Donut'],['pie','Pie']];
+const nf=n=>Math.round(n).toLocaleString('en-US');
+const kf=v=>v>=1000?(Math.round(v/100)/10)+'k':String(Math.round(v));
+function niceMax(v){const p=Math.pow(10,Math.floor(Math.log10(v))),f=v/p;return(f<=1?1:f<=2?2:f<=2.5?2.5:f<=5?5:10)*p}
+function chartHTML(type,items,color,unit){
+  const total=items.reduce((a,b)=>a+b.value,0),n=items.length;
+  if(type==='donut'||type==='pie'){
+    let a0=-Math.PI/2,paths='';const cx=75,cy=75,r=70,ri=type==='donut'?42:0;
+    items.forEach(it=>{const f=it.value/total,a1=a0+f*Math.PI*2,lg=f>.5?1:0;
+      const P=(a,rr)=>[cx+Math.cos(a)*rr,cy+Math.sin(a)*rr];
+      const [x0,y0]=P(a0,r),[x1,y1]=P(a1-.0001,r),[x2,y2]=P(a1-.0001,ri),[x3,y3]=P(a0,ri);
+      const d=ri?`M${x0} ${y0}A${r} ${r} 0 ${lg} 1 ${x1} ${y1}L${x2} ${y2}A${ri} ${ri} 0 ${lg} 0 ${x3} ${y3}Z`:`M${cx} ${cy}L${x0} ${y0}A${r} ${r} 0 ${lg} 1 ${x1} ${y1}Z`;
+      paths+=`<path d="${d}" fill="${it.color}" stroke="var(--surface)" stroke-width="2"><title>${esc(it.label)}: ${nf(it.value)} ${unit}</title></path>`;a0=a1});
+    return `<div class="pie"><svg viewBox="0 0 150 150" role="img" aria-label="Share by ${items.length} groups">${paths}${ri?`<text x="75" y="73" text-anchor="middle" style="font-size:12px">${kf(total)}</text><text x="75" y="88" text-anchor="middle" style="font-size:9px;fill:var(--muted);font-family:var(--sans)">${unit}</text>`:''}</svg>
+    <ul>${items.map(it=>`<li><i style="background:${it.color}"></i><span>${esc(it.label)}</span><span class="n">${nf(it.value)} · ${Math.round(it.value/total*100)}%</span></li>`).join('')}</ul></div>`;
+  }
+  const max=niceMax(Math.max(...items.map(i=>i.value)));
+  if(type==='hbar'){
+    const rowH=30,H=n*rowH+8,L=118,W=360,bw=W-L-56;
+    return `<svg class="chart" viewBox="0 0 ${W} ${H}" role="img">${items.map((it,i)=>{const y=4+i*rowH,w=it.value/max*bw;
+      return `<text x="${L-8}" y="${y+rowH/2+1}" text-anchor="end" dominant-baseline="middle">${esc(it.hl||it.label)}</text><rect x="${L}" y="${y+5}" width="${w}" height="${rowH-12}" rx="4" fill="${it.color||color}"><title>${esc(it.label)}: ${nf(it.value)} ${unit}</title></rect><text class="v" x="${L+w+6}" y="${y+rowH/2+1}" dominant-baseline="middle">${kf(it.value)}</text>`}).join('')}</svg>`;
+  }
+  const W=360,H=220,l=38,r=10,t=18,b=30,pw=W-l-r,ph=H-t-b,slot=pw/n;
+  const X=i=>l+slot*i+slot/2,Y=v=>t+ph-v/max*ph;
+  let g='';for(let k=0;k<=4;k++){const v=max*k/4,y=Y(v);g+=`<line class="grid" x1="${l}" x2="${W-r}" y1="${y}" y2="${y}"/><text x="${l-5}" y="${y+3}" text-anchor="end">${kf(v)}</text>`}
+  const xl=items.map((it,i)=>`<text x="${X(i)}" y="${H-12}" text-anchor="middle">${esc(it.short||it.label)}</text>`).join('');
+  let marks='';
+  if(type==='line'){
+    const pts=items.map((it,i)=>[X(i),Y(it.value)]);
+    marks=`<path d="M${pts[0][0]} ${t+ph}L${pts.map(p=>p.join(' ')).join('L')}L${pts[n-1][0]} ${t+ph}Z" fill="${color}" opacity=".14"/><polyline points="${pts.map(p=>p.join(',')).join(' ')}" fill="none" stroke="${color}" stroke-width="2.5" stroke-linejoin="round"/>`+pts.map((p,i)=>`<circle cx="${p[0]}" cy="${p[1]}" r="4" fill="${color}" stroke="var(--surface)" stroke-width="1.5"><title>${esc(items[i].label)}: ${nf(items[i].value)} ${unit}</title></circle><text class="v" x="${p[0]}" y="${p[1]-9}" text-anchor="middle">${kf(items[i].value)}</text>`).join('');
+  }else{
+    const bw=slot*.62;
+    marks=items.map((it,i)=>`<rect x="${X(i)-bw/2}" y="${Y(it.value)}" width="${bw}" height="${t+ph-Y(it.value)}" rx="3" fill="${it.color||color}"><title>${esc(it.label)}: ${nf(it.value)} ${unit}</title></rect><text class="v" x="${X(i)}" y="${Y(it.value)-4}" text-anchor="middle">${kf(it.value)}</text>`).join('');
+  }
+  return `<svg class="chart" viewBox="0 0 ${W} ${H}" role="img">${g}${marks}${xl}</svg>`;
+}
+function seg(key){return `<div class="seg" role="group" aria-label="Chart type">${CTYPES.map(c=>`<button data-ct="${key}:${c[0]}" aria-pressed="${HOME[key]===c[0]}">${c[1]}</button>`).join('')}</div>`}
+HOME.prov=new Set(PROVS);HOME.f={stress:'',season:'',year:''};
+function glance(){
+  const f=HOME.f,provs=PROVS.filter(p=>HOME.prov.has(p));
+  const rows=published().map(rowOf).filter(r=>HOME.prov.has(r.prov)&&(!f.stress||r.stress===f.stress)&&(!f.season||r.season===f.season)&&(!f.year||String(r.year)===f.year));
+  const aff={};provs.forEach(p=>aff[p]=0);rows.forEach(r=>aff[r.prov]+=r.area);
+  const mk=obj=>provs.map(p=>({label:p,hl:p,short:PSHORT[p],value:obj[p],color:PCOL[PROVS.indexOf(p)]}));
+  const sum=o=>provs.reduce((a,p)=>a+o[p],0);
+  const byS={};STRESS.forEach(s=>byS[s.code]=0);rows.forEach(r=>byS[r.stress]+=r.area);
+  const stressItems=STRESS.filter(s=>byS[s.code]>0).map(s=>({label:s.label,hl:s.label.replace(/ \(.*\)/,'').replace(/Saline intrusion/g,'Saline').replace(/ and /g,' + ').replace('Flood, Saline + drought','Flood + saline + drought'),short:s.code,value:byS[s.code],color:s.color}));
+  const affItems=HOME.group==='prov'?mk(aff):stressItems;
+  const years=[...new Set(published().map(r=>String(r.year)))].sort();
+  const affTotal=sum(aff),physTotal=sum(PHYS);
+  const draw=(type,items,c,unit)=>items.length&&items.some(i=>i.value>0)?chartHTML(type,items.map(i=>({...i,color:(HOME.group==='stress'&&unit==='ha')?i.color:c})),c,unit):'<p class="muted" style="padding:24px 0">No records match these filters.</p>';
+  const filtered=f.stress||f.season||f.year;
+  return `<section aria-label="Rice area at a glance" style="margin-bottom:28px"><div class="glance-head"><div><h2>Rice area at a glance</h2><p>Sample figures for the prototype.</p></div></div>
+  <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(min(100%,340px),1fr))">
+   <div class="card gcard"><div class="top"><span class="lbl">Total physical rice area</span><span class="big">${nf(physTotal)}</span><span class="muted">hectares across ${provs.length} ${provs.length===1?'province':'provinces'}</span></div>
+    <dl class="plist">${provs.map(p=>`<dt>${esc(p)}</dt><dd>${nf(PHYS[p])} ha</dd>`).join('')}</dl></div>
+   <div class="card gcard"><div class="top"><span class="lbl">Total affected area${filtered?' (filtered)':''}</span><span class="big">${nf(affTotal)}</span><span class="muted">hectares · ${(affTotal/physTotal*100).toFixed(1)}% of physical area · ${rows.length} records</span></div>
+    <div class="seg" role="group" aria-label="Group by"><button data-grp="prov" aria-pressed="${HOME.group==='prov'}">By province</button><button data-grp="stress" aria-pressed="${HOME.group==='stress'}">By stress type</button></div>
+    ${draw(HOME.affected,affItems,'#d9731a','ha')}</div>
+   <div class="card gcard"><div class="top"><span class="lbl">Total number of farmers</span><span class="big">${nf(sum(FARM))}</span><span class="muted">registered rice farmers, by province</span></div>${draw(HOME.farmers,mk(FARM),'#3d8fd1','farmers')}</div>
+  </div></section>`;
+}
+/* ---------- Home gallery ---------- */
+const GAL=[{"src": "data:image/placeholder", "th": "data:image/placeholder", "cap": "Coastline and lowland plains", "alt": "Aerial view of the coastline and lowland plains in Bicol"}, {"src": "data:image/placeholder", "th": "data:image/placeholder", "cap": "Harvested fields on the hillside", "alt": "Aerial view of dry harvested fields on a hillside"}, {"src": "data:image/placeholder", "th": "data:image/placeholder", "cap": "Farm road through the fields", "alt": "Concrete farm road running through the fields"}, {"src": "data:image/placeholder", "th": "data:image/placeholder", "cap": "Coconut groves beside the farmland", "alt": "Dense coconut groves next to the farmland"}, {"src": "data:image/placeholder", "th": "data:image/placeholder", "cap": "Farm buildings at the field edge", "alt": "Farm buildings at the edge of the fields"}];
+let slide=0;
+function gallery(){
+  return `<section class="gal" aria-roledescription="carousel" aria-label="Field photos" style="margin-bottom:28px"><div class="glance-head"><div><h2>Field photos</h2><p>Sample photos for the prototype.</p></div></div>
+  <div class="gview"><img id="g-main" src="${GAL[slide].src}" alt="${esc(GAL[slide].alt)}"><div class="gcap" aria-live="polite"><span id="g-cap">${esc(GAL[slide].cap)}</span><span class="c" id="g-n">${slide+1} / ${GAL.length}</span></div>
+   <button class="gnav prev" data-gnav="-1" aria-label="Previous photo">${icon('chl')}</button><button class="gnav next" data-gnav="1" aria-label="Next photo">${icon('chr')}</button></div>
+  <div class="gthumbs" role="group" aria-label="Choose a photo">${GAL.map((g,i)=>`<button data-gs="${i}" aria-label="Photo ${i+1}: ${esc(g.cap)}" aria-current="${i===slide}"><img src="${g.th}" alt=""></button>`).join('')}</div></section>`;
+}
+function setSlide(i){
+  slide=(i+GAL.length)%GAL.length;const g=GAL[slide];
+  $('#g-main').src=g.src;$('#g-main').alt=g.alt;$('#g-cap').textContent=g.cap;$('#g-n').textContent=(slide+1)+' / '+GAL.length;
+  document.querySelectorAll('.gthumbs button').forEach((b,k)=>{b.setAttribute('aria-current',k===slide);if(k===slide)b.scrollIntoView({block:'nearest',inline:'nearest'})});
+}
+
+/* ---------- Pie of pie ---------- */
+const PIE={Albay:{fav:41.01,unf:59.02,parts:[['F',9.88],['S',2.15],['D',22.23],['FD',15.41],['FS',0.06],['SD',0.02],['FSD',9.27]]}};
+const PPS={hover:null,pin:null,prov:'Albay'};
+const PP_FAV='#2f8f4e',PP_UNF='#5b6b7a';
+function ppItems(prov){const d=PIE[prov];return [{k:'fav',label:'Favorable',val:d.fav,color:PP_FAV,tot:true},{k:'unf',label:'Unfavorable',val:d.unf,color:PP_UNF,tot:true},...d.parts.map(([c,v])=>({k:c,label:SM[c].label.replace(/ \(.*\)/,''),val:v,color:SM[c].color,sub:true}))]}
+function pieOfPie(prov){
+  const d=PIE[prov],tot=d.fav+d.unf,items=ppItems(prov),I=Object.fromEntries(items.map(i=>[i.k,i]));
+  const pt=(cx,cy,r,a)=>[cx+Math.cos(a)*r,cy+Math.sin(a)*r];
+  const wedge=(cx,cy,r,a0,a1)=>{const [x0,y0]=pt(cx,cy,r,a0),[x1,y1]=pt(cx,cy,r,a1-.00001);return `M${cx} ${cy}L${x0} ${y0}A${r} ${r} 0 ${a1-a0>Math.PI?1:0} 1 ${x1} ${y1}Z`};
+  const c1=[180,170,120],c2=[560,170,88],fu=d.unf/tot*Math.PI*2;
+  const uS=-fu/2,uE=fu/2,fS=uE,fE=uS+Math.PI*2;
+  const A=pt(c1[0],c1[1],c1[2],uS),B=pt(c1[0],c1[1],c1[2],uE);
+  const sl=(k,cx,cy,r,a0,a1)=>{const m=(a0+a1)/2,ex=Math.cos(m)*7,ey=Math.sin(m)*7,it=I[k];
+    return `<path class="sl" data-k="${k}" tabindex="0" role="button" aria-label="${esc(it.label)}: ${it.val.toFixed(2)} percent" style="--tx:${ex.toFixed(1)}px;--ty:${ey.toFixed(1)}px" d="${wedge(cx,cy,r,a0,a1)}" fill="${it.color}" stroke="var(--surface)" stroke-width="2"/>`};
+  let a=-Math.PI/2,sub='';const psum=d.parts.reduce((x,y)=>x+y[1],0);
+  d.parts.forEach(([code,v])=>{const a1=a+v/psum*Math.PI*2;
+    sub+=sl(code,c2[0],c2[1],c2[2],a,a1);
+    if(v/psum>.08){const m=pt(c2[0],c2[1],c2[2]*.62,(a+a1)/2);sub+=`<text class="pl" data-k="${code}" x="${m[0]}" y="${m[1]+5}" text-anchor="middle" style="font-size:13px">${v.toFixed(1)}</text>`}
+    a=a1});
+  const mf=pt(c1[0],c1[1],c1[2]*.58,(fS+fE)/2),mu=pt(c1[0],c1[1],c1[2]*.58,0);
+  const svg=`<svg class="pp" viewBox="0 0 720 340" role="group" aria-label="Pie of pie chart for ${esc(prov)}: favorable ${d.fav}% and unfavorable ${d.unf}%, with unfavorable broken down by stress type">
+   <line class="ln" x1="${A[0]}" y1="${A[1]}" x2="${c2[0]}" y2="${c2[1]-c2[2]}"/><line class="ln" x1="${B[0]}" y1="${B[1]}" x2="${c2[0]}" y2="${c2[1]+c2[2]}"/>
+   ${sl('fav',c1[0],c1[1],c1[2],fS,fE)}${sl('unf',c1[0],c1[1],c1[2],uS,uE)}
+   <text class="pl" data-k="fav" x="${mf[0]}" y="${mf[1]-2}" text-anchor="middle">Favorable</text><text class="pl" data-k="fav" x="${mf[0]}" y="${mf[1]+18}" text-anchor="middle">${d.fav.toFixed(2)}%</text>
+   <text class="pl" data-k="unf" x="${mu[0]-6}" y="${mu[1]-2}" text-anchor="middle" style="font-size:13.5px">Unfavorable</text><text class="pl" data-k="unf" x="${mu[0]-6}" y="${mu[1]+18}" text-anchor="middle">${d.unf.toFixed(2)}%</text>
+   ${sub}<text class="cap" x="${c2[0]}" y="${c2[1]+c2[2]+28}" text-anchor="middle">Unfavorable, by stress type</text></svg>`;
+  const leg=`<ul class="ppleg">${items.map(i=>`<li class="${i.tot?'tot':''}" data-k="${i.k}" tabindex="0" role="button"><i style="background:${i.color}"></i>${esc(i.label)}<span class="n">${i.val.toFixed(2)}%</span></li>`).join('')}</ul>`;
+  return `<section aria-label="Land condition in ${esc(prov)}" style="margin-bottom:28px"><div class="glance-head"><div><h2>Land condition in ${esc(prov)}</h2><p>Share of rice area that is favorable or unfavorable, with the unfavorable part split by stress type. Hover or tap a slice for details. Sample figures.</p></div></div>
+   <div class="card ppwrap" id="pp"><div class="ppdetail" id="pp-detail" aria-live="polite"></div>${svg}<div class="pptip" id="pp-tip" hidden></div>${leg}</div></section>`;
+}
+function ppApply(){
+  const root=$('#pp');if(!root)return;
+  const key=PPS.hover||PPS.pin,items=ppItems(PPS.prov),I=Object.fromEntries(items.map(i=>[i.k,i]));
+  root.classList.toggle('active',!!key);
+  const rel=k=>!key?false:(key===k||(I[key].sub&&k==='unf')||(key==='unf'&&I[k].sub));
+  root.querySelectorAll('[data-k]').forEach(el=>{const k=el.dataset.k;el.classList.toggle('on',k===key);el.classList.toggle('rel',!!key&&k!==key&&rel(k));el.classList.toggle('pin',k===PPS.pin&&el.matches('.sl,li'))});
+  const dt=$('#pp-detail'),d=PIE[PPS.prov];
+  if(!key){dt.innerHTML='<span class="muted">Hover, tap or press Enter on a slice to see its share and estimated area.</span>'}
+  else{const it=I[key],ha=it.val/100*PHYS[PPS.prov],share=it.sub?` · <b class="mono">${(it.val/d.unf*100).toFixed(1)}%</b> of the unfavorable area`:'';
+    dt.innerHTML=`<span class="badge"><i style="background:${it.color}"></i>${esc(it.label)}</span><span class="big mono">${it.val.toFixed(2)}%</span><span>of ${esc(PPS.prov)} rice area · about <b class="mono">${nf(ha)}</b> ha${share}</span>${PPS.pin===key?'<span class="muted">(pinned, select again to release)</span>':''}`}
+}
+(function(){
+  const kOf=e=>{const el=e.target.closest&&e.target.closest('#pp [data-k]');return el&&el.dataset.k};
+  document.addEventListener('pointerover',e=>{const k=kOf(e);if(k!==undefined&&k!==null&&e.pointerType!=='touch'){PPS.hover=k;ppApply()}});
+  document.addEventListener('pointerout',e=>{if(kOf(e)&&!(e.relatedTarget&&e.relatedTarget.closest&&e.relatedTarget.closest('#pp [data-k]'))){PPS.hover=null;ppApply();const t=$('#pp-tip');t&&(t.hidden=true)}});
+  document.addEventListener('pointermove',e=>{const k=kOf(e),t=$('#pp-tip');if(!t)return;
+    if(!k||e.pointerType==='touch'){t.hidden=true;return}
+    const it=ppItems(PPS.prov).find(i=>i.k===k),r=$('#pp').getBoundingClientRect();
+    t.innerHTML=`<b>${esc(it.label)}</b> <span class="mono">${it.val.toFixed(2)}%</span>`;t.hidden=false;
+    t.style.left=Math.min(e.clientX-r.left+14,r.width-t.offsetWidth-6)+'px';t.style.top=(e.clientY-r.top+14)+'px'});
+  document.addEventListener('click',e=>{const k=kOf(e);if(!k)return;PPS.pin=PPS.pin===k?null:k;PPS.hover=null;ppApply()});
+  document.addEventListener('keydown',e=>{const k=kOf(e);if(k&&(e.key==='Enter'||e.key===' ')){e.preventDefault();PPS.pin=PPS.pin===k?null:k;ppApply()}});
+  document.addEventListener('focusin',e=>{const k=kOf(e);if(k){PPS.hover=k;ppApply()}});
+  document.addEventListener('focusout',e=>{if(kOf(e)){PPS.hover=null;ppApply()}});
+})();
+
+AFTER.home=()=>ppApply();
+VIEWS.home=()=>{
+  
+  return `<section class="hero" aria-label="Aerial view of rice and coconut farmland in Bicol"><span class="sun" aria-hidden="true"></span><h1>Bicol Rice Stress Prone Information Hub</h1></section>
+    ${glance()}
+    ${pieOfPie('Albay')}
+    ${gallery()}
+    <div class="legend" style="margin-bottom:20px" aria-label="Stress types">${STRESS.map(s=>badge(s.code)).join('')}</div>
+    `;
+};
+
+/* ---------- Adverse Data ---------- */
+function filteredRows(){
+  const d=S.data,q=d.q.trim().toLowerCase();
+  return published().map(rowOf).filter(r=>(!d.prov||r.prov===d.prov)&&(!d.stress||r.stress===d.stress)&&(!d.season||r.season===d.season)&&(!d.year||String(r.year)===d.year)&&(!q||r.muni.toLowerCase().includes(q)||r.brgyName.toLowerCase().includes(q)));
+}
+function muniRows(){
+  const g={};filteredRows().forEach(r=>{const m=brgyById(r.brgy).muni,x=g[m]||(g[m]={id:m,muni:r.muni,prov:r.prov,area:0,farmers:0,brgys:new Set(),recs:[]});x.area+=r.area;x.farmers+=r.farmers||0;x.brgys.add(r.brgy);x.recs.push(r)});
+  const k=S.data.sort,dir=S.data.dir;
+  return Object.values(g).sort((a,b)=>{const c=(typeof a[k]==='string')?a[k].localeCompare(b[k]):a[k]-b[k];return (c||a.muni.localeCompare(b.muni))*dir});
+}
+const sel=(id,label,opts,val)=>`<div class="field"><label for="${id}">${label}</label><select id="${id}">${opts.map(o=>`<option value="${esc(o[0])}" ${o[0]===val?'selected':''}>${esc(o[1])}</option>`).join('')}</select></div>`;
+const FORM_COLS=[['F','Flood'],['S','Salt-Affected'],['D','Drought'],['FD','Flood and Drought'],['FS','Flood and Salt-Affected'],['SD','Drought and Salt-Affected'],['FSD','Flood, Salt-Affected and Drought']];
+function muniDialog(rows){
+  const m=rows.find(x=>x.id===S.data.open);if(!m)return '';
+  const by={};m.recs.forEach(r=>{const x=by[r.brgy]||(by[r.brgy]={name:r.brgyName,a:{}});x.a[r.stress]=(x.a[r.stress]||0)+r.area});
+  const list=Object.values(by).sort((p,q)=>p.name.localeCompare(q.name));
+  const tot={};FORM_COLS.forEach(([c])=>tot[c]=list.reduce((t,x)=>t+(x.a[c]||0),0));
+  const logo=document.querySelector('.brand .logo'),src=logo?logo.src:'';
+  const cell=v=>v?fmt(v):'';
+  return `<div class="ov" id="muni-ov"><div class="dlg form" role="dialog" aria-modal="true" aria-labelledby="dlg-t">
+   <button class="btn ghost sm dlg-x" id="dlg-close" data-act="closemuni" aria-label="Close">${icon('x')}Close</button>
+   <div class="formhead">${src?`<img src="${src}" alt="Department of Agriculture Region 5 logo" width="84" height="75">`:''}<div><div class="f1">Republic of the Philippines</div><div class="f2">DEPARTMENT OF AGRICULTURE</div><div class="f2">REGIONAL FIELD OFFICE 5</div><div class="f1">San Agustin, Pili, Camarines Sur</div></div></div>
+   <p class="formtitle">Project Title: Enhancing Resiliency and Food Security in Adverse Rice Areas in Bicol Region (Component 1)</p>
+   <h3 id="dlg-t" class="formmuni">Municipality: ${esc(m.muni)}, ${esc(m.prov)}</h3>
+   <div class="tw ftw"><table class="ftable"><caption style="position:absolute;left:-9999px">Affected area in hectares by barangay and stress type, ${esc(m.muni)}</caption>
+    <thead><tr><th scope="col" rowspan="2" class="fno">No.</th><th scope="col" rowspan="2" class="fbr">Barangay</th>${FORM_COLS.map(([c,l])=>`<th scope="col">${l}</th>`).join('')}</tr>
+    <tr class="fsub">${FORM_COLS.map(()=>'<th scope="col"><i>Area (ha)</i></th>').join('')}</tr></thead>
+    <tbody>${list.map((x,i)=>`<tr><td class="fc">${i+1}</td><td>${esc(x.name)}</td>${FORM_COLS.map(([c])=>`<td class="fn mono">${cell(x.a[c])}</td>`).join('')}</tr>`).join('')}
+    <tr class="ftot"><th scope="row" colspan="2">TOTAL</th>${FORM_COLS.map(([c])=>`<td class="fn mono">${tot[c]?fmt(tot[c]):'0'}</td>`).join('')}</tr></tbody></table></div></div></div>`;
+}
+VIEWS.data=()=>{
+  const d=S.data,rows=muniRows(),per=10,pages=Math.max(1,Math.ceil(rows.length/per));d.page=Math.min(d.page,pages);
+  const slice=rows.slice((d.page-1)*per,d.page*per),years=[...new Set(published().map(r=>String(r.year)))].sort();
+  const th=(k,l,cls='')=>`<th class="${cls}" scope="col" aria-sort="${d.sort===k?(d.dir>0?'ascending':'descending'):'none'}"><button data-sort="${k}">${l}${icon(d.sort===k?(d.dir>0?'up':'down'):'sort')}</button></th>`;
+  const totA=rows.reduce((a,r)=>a+r.area,0),totF=rows.reduce((a,r)=>a+r.farmers,0);
+  return `<div class="page-head"><h2>Adverse Data</h2><p>Affected rice area and farmers by municipality. Select a municipality to see its barangays.</p></div>
+  <div class="toolbar"><div class="field searchbox"><label for="q">Search</label>${icon('search')}<input id="q" type="search" placeholder="Municipality or barangay" value="${esc(d.q)}"></div>
+   ${sel('f-prov','Province',[['','All provinces'],...PROVS.map(p=>[p,p])],d.prov)}
+   ${sel('f-stress','Stress type',[['','All types'],...STRESS.map(s=>[s.code,s.label])],d.stress)}
+   <button class="btn ghost" data-act="csv">${icon('copy')}Export CSV</button></div>
+  <div class="meta"><span><span class="mono">${rows.length}</span> municipalities</span><span><span class="mono">${fmt(totA)}</span> ha affected</span><span><span class="mono">${nf(totF)}</span> farmers affected</span><span>Sample data · Last updated ${today}</span></div>
+  ${d.csv?`<div class="card" style="margin-bottom:14px"><div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:center"><b>CSV of the current filter</b><span style="display:flex;gap:8px"><button class="btn sm" data-act="copycsv">${icon('copy')}Copy to clipboard</button><button class="btn ghost sm" data-act="csv">Close</button></span></div><pre class="csv" id="csvbox">${esc(toCSV(rows))}</pre></div>`:''}
+  <div class="tw"><table><caption class="lbl" style="position:absolute;left:-9999px">Affected area and farmers by municipality</caption><thead><tr>${th('prov','Province')}${th('muni','Municipality')}${th('area','Affected area (ha)','num')}${th('farmers','Affected farmers','num')}</tr></thead>
+  <tbody>${slice.length?slice.map(r=>`<tr><td>${esc(r.prov)}</td><td><button class="linkbtn" data-muni="${r.id}" aria-haspopup="dialog">${esc(r.muni)}${icon('arrow')}</button></td><td class="num mono">${fmt(r.area)}</td><td class="num mono">${nf(r.farmers)}</td></tr>`).join(''):'<tr><td colspan="4" class="muted">No records match these filters.</td></tr>'}</tbody></table></div>
+  <div class="pager"><span>Page <span class="mono">${d.page}</span> of <span class="mono">${pages}</span></span><div><button class="btn ghost sm" data-page="-1" ${d.page<=1?'disabled':''}>Previous</button><button class="btn ghost sm" data-page="1" ${d.page>=pages?'disabled':''}>Next</button></div></div>
+  ${d.open?muniDialog(rows):''}`;
+};
+function toCSV(rows){return ['province,municipality,affected_area_ha,affected_farmers',...rows.map(r=>[r.prov,r.muni,Math.round(r.area*10)/10,r.farmers].map(v=>/[",]/.test(v)?`"${v}"`:v).join(','))].join('\n')}
+AFTER.data=()=>{
+  [['f-prov','prov'],['f-stress','stress'],].forEach(([id,k])=>$('#'+id).addEventListener('change',e=>{S.data[k]=e.target.value;S.data.page=1;render()}));
+  $('#q').addEventListener('input',e=>{S.data.q=e.target.value;S.data.page=1;const pos=e.target.selectionStart;render();const n=$('#q');n.focus();n.setSelectionRange(pos,pos)});
+  const ov=$('#muni-ov');if(ov){ov.addEventListener('click',e=>{if(e.target===ov){S.data.open=null;render()}});const c=$('#dlg-close');c&&c.focus({preventScroll:true})}
+};
+
+/* ---------- Interactive Map ---------- */
+VIEWS.map=()=>{
+  const M=S.map;
+  return `<div class="page-head"><h2>Interactive Map</h2><p>Stress-prone rice areas by barangay. Shapes are illustrative until official boundary files are loaded.</p></div>
+  <div class="mapcard"><div id="lmap" role="application" aria-label="Map of stress-prone rice areas in Bicol"></div>
+   <button class="btn sm layers-toggle" data-act="drawer" aria-expanded="false">${icon('layers')}Layers</button>
+   <div class="layers" id="layers"><h3>Layers</h3>
+    <div class="grp"><span class="lbl">Stress type</span>${STRESS.map(s=>`<label class="chk"><input type="checkbox" data-st="${s.code}" ${M.stress.has(s.code)?'checked':''}><i style="background:${s.color}"></i>${esc(s.label)}</label>`).join('')}
+     <label class="chk"><input type="checkbox" id="outline" ${M.outline?'checked':''}>Outline patterns (no fill)</label></div>
+    <div class="grp"><span class="lbl">Province</span>${PROVS.map(p=>`<label class="chk"><input type="checkbox" data-pv="${esc(p)}" ${M.prov.has(p)?'checked':''}>${p}</label>`).join('')}</div>
+    <div class="grp"><span class="lbl">Overlays</span><label class="chk"><input type="checkbox" id="ov-m" ${M.munis?'checked':''}>Municipal boundaries</label><label class="chk"><input type="checkbox" id="ov-b" ${M.basin?'checked':''}>Bicol River Basin</label></div>
+    <span class="muted" id="count" style="font-size:.84rem"></span></div>
+   <div class="ctrl"><button data-act="zin" aria-label="Zoom in">${icon('plus')}</button><button data-act="zout" aria-label="Zoom out">${icon('minus')}</button><button data-act="loc" aria-label="Re-center on Bicol">${icon('locate')}</button></div>
+   <div id="info"></div>
+   <div class="attrib">Tiles © OpenStreetMap contributors</div></div>`;
+};
+const BASIN=[[13.44,123.50],[13.48,123.42],[13.52,123.33],[13.58,123.27],[13.62,123.22],[13.68,123.18],[13.74,123.17]];
+AFTER.map=()=>{
+  const M=S.map;
+  const map=L.map('lmap',{zoomControl:false,attributionControl:false,minZoom:7,maxZoom:13});S.lmap=map;
+  map.fitBounds([[11.9,122.6],[14.3,124.5]]);
+  L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:13,opacity:.9}).addTo(map);
+  const polys=L.layerGroup().addTo(map),mun=L.layerGroup(),basin=L.layerGroup();
+  DB.munis.forEach(m=>L.circle([m.lat,m.lng],{radius:7500,color:'#6b7f73',weight:1.5,dashArray:'3 5',fill:false,interactive:false}).addTo(mun));
+  L.polyline(BASIN,{color:'#2b6cb0',weight:4,opacity:.8,interactive:false}).addTo(basin);
+  const latest={};published().forEach(r=>{const c=latest[r.brgy];if(!c||r.year>c.year)latest[r.brgy]=r});
+  function draw(){
+    polys.clearLayers();let n=0;
+    Object.values(latest).forEach(r0=>{const r=rowOf(r0);if(!M.stress.has(r.stress)||!M.prov.has(r.prov))return;n++;
+      const s=SM[r.stress],b=brgyById(r.brgy);
+      const p=L.polygon(b.poly,{color:s.color,weight:M.outline?3:1.2,fillColor:s.color,fillOpacity:M.outline?.06:.6,dashArray:M.outline?s.dash:''});
+      p.on('click',()=>{M.sel=r;showInfo()});p.addTo(polys)});
+    $('#count').textContent=n+' barangays shown';
+    map[M.munis?'addLayer':'removeLayer'](mun);map[M.basin?'addLayer':'removeLayer'](basin);
+  }
+  function showInfo(){const r=M.sel;if(!r){$('#info').innerHTML='';return}
+    $('#info').innerHTML=`<div class="info"><div style="display:flex;justify-content:space-between;gap:8px;align-items:start"><h3>${esc(r.brgyName)}</h3><button class="btn ghost sm" data-act="closeinfo" aria-label="Close">${icon('x')}</button></div>
+    <div>${badge(r.stress)}</div><dl><dt>Municipality</dt><dd>${esc(r.muni)}</dd><dt>Province</dt><dd>${esc(r.prov)}</dd><dt>Area</dt><dd class="mono">${fmt(r.area)} ha</dd><dt>Season</dt><dd>${r.season}</dd><dt>Year</dt><dd class="mono">${r.year}</dd></dl>
+    <a href="#practices" data-act="topractice" data-prov="${esc(r.prov)}" data-stress="${r.stress}" data-season="${r.season}">Farm practices for this area ${icon('arrow')}</a></div>`}
+  draw();showInfo();
+  const L2=$('#layers');
+  L2.addEventListener('change',e=>{const t=e.target;
+    if(t.dataset.st){t.checked?M.stress.add(t.dataset.st):M.stress.delete(t.dataset.st)}
+    else if(t.dataset.pv){t.checked?M.prov.add(t.dataset.pv):M.prov.delete(t.dataset.pv)}
+    else if(t.id==='outline')M.outline=t.checked;else if(t.id==='ov-m')M.munis=t.checked;else if(t.id==='ov-b')M.basin=t.checked;
+    draw()});
+  S.lmapAct=a=>{if(a==='zin')map.zoomIn();if(a==='zout')map.zoomOut();if(a==='loc')map.fitBounds([[11.9,122.6],[14.3,124.5]])};
+};
+
+/* ---------- Farm Practices ---------- */
+const BASE={Albay:[1.2,86],'Camarines Norte':[1.4,82],'Camarines Sur':[1.5,90],Catanduanes:[.9,74],Masbate:[1.1,70],Sorsogon:[1.0,78]};
+const YF={N:1,F:.75,S:.7,D:.65,FD:.6,FS:.55,SD:.5,FSD:.45};
+const TABS=['Seeds','Land','Crop','Nutrients','Water','Pests','Harvest'];
+const SEEDV={N:['NSIC Rc 222','Recommended for normal conditions'],F:['Submergence-tolerant (Sub1) variety','Survives up to two weeks under floodwater'],S:['Salt-tolerant variety, to be confirmed by DA','Tolerates salty irrigation or tidal water'],D:['Drought-tolerant variety, to be confirmed by DA','Finishes the crop on less water'],FD:['Flood- and drought-tolerant variety, to be confirmed','Covers both swings in one season'],FS:['Submergence- and salt-tolerant variety, to be confirmed','Coastal areas flooded by tide and storm'],SD:['Salt- and drought-tolerant variety, to be confirmed','Dry-season salinity near the coast'],FSD:['Multiple-stress variety, to be confirmed','Choose the shortest-duration option available']};
+const TIPS={
+ Land:{N:['Level the field so water depth is even.','Repair dikes before land soaking.','Plow and harrow two to three weeks before transplanting.'],F:['Clear drainage canals before the rainy season.','Raise and reinforce dikes along low sides.','Prepare a nursery on higher ground.'],S:['Flush fields with fresh water before planting where available.','Avoid fields that tidal water reaches at planting.','Add organic matter to improve soil structure.'],D:['Keep seedbeds near a reliable water source.','Use mulch or stubble to hold soil moisture.','Plan planting to avoid the driest weeks.']},
+ Crop:{N:['Transplant 18 to 21 day old seedlings.','Plant two to three seedlings per hill.','Match planting date to the season calendar.'],F:['Use older, taller seedlings where flooding is likely.','Time planting so seedlings pass the flood peak.','Keep spare seedlings for replanting.'],S:['Transplant seedlings with deeper roots after flushing.','Increase seedlings per hill to cover losses.','Avoid planting at peak tide salinity.'],D:['Choose short-duration varieties.','Use direct seeding only where water control is poor.','Stagger planting dates across plots.']},
+ Nutrients:{N:['Apply fertilizer by soil test or the DA recommended rate.','Split nitrogen across the growth stages.','Apply organic fertilizer before the final harrowing.'],F:['Delay nitrogen until floodwater recedes.','Apply a recovery dose after the water drains.','Avoid broadcasting before heavy rain.'],S:['Apply zinc where soil tests show a shortage.','Use ammonium-based nitrogen sources.','Add organic matter to reduce salt effects.'],D:['Reduce nitrogen when water is short.','Apply potassium to help the crop use water.','Place fertilizer in moist soil.']},
+ Water:{N:['Keep two to five centimetres of water during vegetative growth.','Drain fields about ten days before harvest.','Use alternate wetting and drying where water is limited.'],F:['Open drains as soon as the water crests.','Keep floodwater moving rather than standing.','Pump out low fields when the river falls.'],S:['Irrigate only when the canal is below the salinity limit.','Store fresh rainwater in field ponds.','Drain and refill fields to flush salts.'],D:['Use alternate wetting and drying.','Irrigate at flowering, the most sensitive stage.','Share turns with neighbouring farms through the irrigators association.']},
+ Pests:{N:['Scout the field weekly.','Conserve natural enemies such as spiders and wasps.','Use pesticide only above the action threshold.'],F:['Watch for bacterial leaf blight after floods.','Remove and bury debris left by floodwater.','Drain fields to cut snail pressure.'],S:['Watch for weak plants, which attract stem borers.','Keep weeds down so they do not compete for scarce fresh water.','Scout after each flush.'],D:['Watch for rats, which move to wet fields in dry spells.','Check for planthoppers after rain breaks a dry spell.','Keep field borders clean.']},
+ Harvest:{N:['Harvest when 80 to 85 percent of grains are straw-colored.','Dry grain to 14 percent moisture.','Store in clean, dry sacks.'],F:['Harvest early if floods are forecast.','Dry grain at once to prevent molding.','Sort out sprouted grain.'],S:['Harvest on time because salty fields mature unevenly.','Wash and dry equipment after use.','Keep seed from the healthiest plots only.'],D:['Harvest promptly once grains mature.','Expect lighter grain, so adjust drying time.','Save seed from drought survivors.']}};
+VIEWS.practices=()=>{
+  const P=S.prac,[size,yb]=BASE[P.prov],y=Math.round(yb*YF[P.stress]*(P.season==='Dry'?.95:1)*10)/10,price=Math.round((19+(YF[P.stress]<.6?2.4:1))*10)/10;
+  const mm=DB.munis.map(m=>{const x=(m.lng-122.6)/1.95*100,yy=(14.35-m.lat)/2.5*100;return `<circle cx="${x*1.4}" cy="${yy*1.4}" r="${m.prov===P.prov?3.6:2.2}" fill="${m.prov===P.prov?'var(--link)':'var(--line)'}"/>`}).join('');
+  const sg=P.stress;
+  const tab=P.tab==='Seeds'?`<div class="tw"><table><thead><tr><th scope="col">Seed type</th><th scope="col">Variety</th><th scope="col" class="num">Seeding rate</th><th scope="col">Why this choice</th><th scope="col">Remarks</th></tr></thead><tbody>
+    <tr><td>Inbred</td><td>${esc(SEEDV[sg][0])}</td><td class="num mono">77.5 kg/ha</td><td>${esc(SEEDV[sg][1])}</td><td>Certified seed</td></tr>
+    <tr><td>Hybrid</td><td>Hybrid variety for the area</td><td class="num mono">19.79 bags/ha</td><td>Higher yield potential with good water control</td><td>Unit to be confirmed</td></tr>
+    <tr><td>Home-saved</td><td>Farmer's own seed</td><td class="num mono">85 kg/ha</td><td>Lower cost</td><td>Clean and test germination first</td></tr></tbody></table></div>
+    <div class="note">${icon('info')}<span>The hybrid rate is in bags per ha while the others are in kg per ha. DA agronomists need to confirm the unit and value. Variety names marked "to be confirmed" are placeholders.</span></div>`
+    :`<div class="card"><h3>${P.tab}</h3><ul class="tips">${(TIPS[P.tab][sg]||TIPS[P.tab][sg.includes('S')&&!sg.includes('F')?'S':sg.includes('F')?'F':'D']).map(t=>`<li>${t}</li>`).join('')}</ul><div class="note">${icon('info')}<span>Sample guidance for the prototype. Final text comes from DA Region V agronomists.</span></div></div>`;
+  return `<div class="page-head"><h2>Farm Practices</h2><p>Guidance by province, stress type and season.</p></div>
+  <div class="toolbar">${sel('p-prov','Province',PROVS.map(p=>[p,p]),P.prov)}${sel('p-stress','Stress type',[['N','Normal (baseline)'],...STRESS.map(s=>[s.code,s.label])],P.stress)}${sel('p-season','Season',[['Wet','Wet'],['Dry','Dry']],P.season)}</div>
+  <div class="pwrap"><div>
+   <div class="strip"><div class="card"><span class="lbl">Farm size</span><span class="n">${size.toFixed(1)}</span><span class="muted">ha, average</span></div><div class="card"><span class="lbl">Yield</span><span class="n">${y}</span><span class="muted">cavans per ha</span></div><div class="card"><span class="lbl">Price</span><span class="n">${price.toFixed(1)}</span><span class="muted">pesos per kg</span></div></div>
+   <div class="tabs" role="tablist" aria-label="Practice categories">${TABS.map(t=>`<button role="tab" aria-selected="${t===P.tab}" data-tab="${t}">${t}</button>`).join('')}</div>
+   ${tab}</div>
+   <aside class="card" aria-label="Location"><span class="lbl">Province in Bicol</span><svg class="minimap" viewBox="0 0 140 175" role="img" aria-label="Municipalities of ${esc(P.prov)} highlighted in Bicol">${mm}</svg><p style="font-weight:600;margin-top:8px">${esc(P.prov)}</p>
+   <p class="muted" style="font-size:.84rem;margin-top:4px">Figures are sample values. ${P.stress==='N'?'Normal is the baseline with no stress.':''}</p></aside></div>`;
+};
+AFTER.practices=()=>{[['p-prov','prov'],['p-stress','stress'],['p-season','season']].forEach(([id,k])=>$('#'+id).addEventListener('change',e=>{S.prac[k]=e.target.value;render()}))};
+
+/* ---------- Account ---------- */
+const DEMO={LGU:'lgu.daraga@example.ph',DA:'da.reviewer@example.ph',Admin:'admin@example.ph'};
+function loginView(){
+  const mopts=DB.munis.map(m=>`<option value="${esc(m.name)}">${esc(m.name)}, ${esc(m.prov)}</option>`).join('');
+  return `<div class="page-head"><h2>Login</h2><p>LGU representatives submit reports. DA reviewers publish them. Browsing needs no account.</p></div>
+  <div class="grid g2"><form class="card stack" id="f-login" novalidate><h3>Sign in</h3>
+   <div class="field"><label for="l-email">Email</label><input id="l-email" type="email" autocomplete="username" required></div>
+   <div class="field"><label for="l-pw">Password</label><input id="l-pw" type="password" autocomplete="current-password" required></div>
+   <div class="err" id="l-err" role="alert">${esc(S.acct.err.login||'')}</div>
+   <button class="btn" type="submit">${icon('login')}Sign in</button>
+   <div><span class="lbl">Try a demo account (password demo1234)</span><div class="quick" style="margin-top:6px"><button type="button" class="btn ghost sm" data-demo="LGU">LGU · Daraga</button><button type="button" class="btn ghost sm" data-demo="DA">DA reviewer</button><button type="button" class="btn ghost sm" data-demo="Admin">Admin</button></div></div></form>
+  <form class="card stack" id="f-reg" novalidate><h3>Register as LGU user</h3>
+   <div class="field"><label for="r-name">Full name</label><input id="r-name" type="text" autocomplete="name"></div>
+   <div class="field"><label for="r-muni">Municipality</label><select id="r-muni" style="border-radius:10px">${mopts}</select></div>
+   <div class="field"><label for="r-email">Email</label><input id="r-email" type="email" autocomplete="email"></div>
+   <div class="field"><label for="r-pw">Password (8 characters or more)</label><input id="r-pw" type="password" autocomplete="new-password"></div>
+   <div class="err" id="r-err" role="alert">${esc(S.acct.err.reg||'')}</div><div class="ok-msg" role="status">${esc(S.acct.msg)}</div>
+   <button class="btn" type="submit">Register</button><p class="muted" style="font-size:.84rem">DA approves each account before it can submit reports.</p></form></div>`;
+}
+const myReports=()=>DB.reports.filter(r=>r.muni===S.user.muni);
+function repItems(r){return r.items.map(i=>{const b=brgyById(i.brgy);return `<li>${esc(b.name)} · ${badge(i.stress)} · <span class="mono">${fmt(i.area)} ha</span> · <span class="mono">${nf(i.farmers||0)}</span> farmers · ${i.season} ${i.year}</li>`}).join('')}
+function repCard(r,review){return `<div class="row-card"><div style="min-width:0;flex:1 1 320px"><div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><b class="mono">${r.id}</b><span class="status st-${r.status}">${r.status}</span><span class="muted">${esc(r.muni)} · ${r.at}${review?' · by '+esc(r.by):''}</span></div>
+  <ul class="tips" style="margin-top:8px">${repItems(r)}</ul>
+  <p class="muted" style="margin-top:8px;font-size:.86rem">${icon('file')} ${r.files.map(esc).join(', ')||'No file'}</p>
+  ${r.review_notes?`<p style="margin-top:6px;font-size:.88rem"><b>Reviewer notes:</b> ${esc(r.review_notes)}</p>`:''}</div>
+  ${review&&r.status==='Submitted'?`<div class="stack" style="flex:0 1 280px;width:100%"><div class="field"><label for="n-${r.id}">Notes (needed to return)</label><textarea id="n-${r.id}" rows="2"></textarea></div><div class="err" id="e-${r.id}" role="alert"></div><div class="quick"><button class="btn sm" data-pub="${r.id}">${icon('check')}Publish</button><button class="btn danger sm" data-ret="${r.id}">Return to LGU</button></div></div>`:''}</div>`}
+function lguView(){
+  const u=S.user,A=S.acct,bs=DB.brgys.filter(b=>b.muni===muniByName(u.muni).id);
+  const rows=A.draft.map((d,i)=>`<div class="formgrid card" style="padding:12px;background:var(--bg)">
+    <div class="field"><label for="d-b${i}">Barangay</label><select id="d-b${i}" data-d="${i}" data-k="brgy" style="border-radius:10px"><option value="">Choose</option>${bs.map(b=>`<option value="${b.id}" ${String(d.brgy)===String(b.id)?'selected':''}>${esc(b.name)}</option>`).join('')}</select></div>
+    <div class="field"><label for="d-s${i}">Stress type</label><select id="d-s${i}" data-d="${i}" data-k="stress" style="border-radius:10px">${STRESS.map(s=>`<option value="${s.code}" ${d.stress===s.code?'selected':''}>${esc(s.label)}</option>`).join('')}</select></div>
+    <div class="field"><label for="d-a${i}">Area (ha)</label><input id="d-a${i}" data-d="${i}" data-k="area" type="number" min="0" step="0.1" value="${esc(d.area)}"></div>
+    <div class="field"><label for="d-f${i}">Affected farmers</label><input id="d-f${i}" data-d="${i}" data-k="farmers" type="number" min="0" step="1" value="${esc(d.farmers)}"></div>
+    <div class="field"><label for="d-se${i}">Season</label><select id="d-se${i}" data-d="${i}" data-k="season" style="border-radius:10px"><option ${d.season==='Wet'?'selected':''}>Wet</option><option ${d.season==='Dry'?'selected':''}>Dry</option></select></div>
+    <div class="field"><label for="d-y${i}">Year</label><input id="d-y${i}" data-d="${i}" data-k="year" type="number" value="${esc(d.year)}"></div>
+    ${A.draft.length>1?`<div class="field"><label>&nbsp;</label><button type="button" class="btn ghost sm" data-rm="${i}">Remove</button></div>`:''}</div>`).join('');
+  return `<div class="grid g2" style="grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr))"><section class="card stack"><h3>Submit a report</h3><p class="muted">Reports for ${esc(u.muni)} only. One report can hold several barangays.</p>
+   <form id="f-rep" class="stack" novalidate>${rows}<div><button type="button" class="btn ghost sm" data-act="addrow">${icon('plus')}Add barangay</button></div>
+   <div class="field"><label for="d-file">Supporting document (PDF, JPG or PNG, up to 5 MB)</label><input id="d-file" type="file" accept=".pdf,.jpg,.jpeg,.png"></div>
+   <div class="err" role="alert">${esc(A.err.rep||'')}</div><div class="ok-msg" role="status">${esc(A.msg)}</div>
+   <button class="btn" type="submit">Submit report</button></form></section>
+  <section class="card"><h3>My reports</h3>${myReports().length?myReports().map(r=>repCard(r,false)).join(''):'<p class="muted" style="margin-top:8px">No reports yet.</p>'}</section></div>`}
+function daView(){
+  const q=DB.reports.filter(r=>r.status==='Submitted'),done=DB.reports.filter(r=>r.status!=='Submitted');
+  const pend=DB.users.filter(u=>u.status==='Pending');
+  const tabs=S.user.role==='Admin'?['reports','users','reference']:['reports'];
+  let body='';
+  if(A().tab==='reports')body=`<div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr))"><section class="card"><h3>Review queue <span class="mono muted">(${q.length})</span></h3>${q.length?q.map(r=>repCard(r,true)).join(''):'<p class="muted" style="margin-top:8px">Nothing waiting for review.</p>'}</section>
+   <section class="card"><h3>Decided</h3>${done.map(r=>repCard(r,true)).join('')||'<p class="muted">None yet.</p>'}<h3 style="margin-top:20px">Audit log</h3><ul class="tips">${DB.log.slice().reverse().map(l=>`<li><span class="mono">${l.at}</span> · ${esc(l.text)}</li>`).join('')}</ul></section></div>`;
+  if(A().tab==='users')body=`<section class="card"><h3>LGU accounts</h3>${DB.users.filter(u=>u.role==='LGU').map(u=>`<div class="row-card"><div><b>${esc(u.name)}</b><div class="muted">${esc(u.email)} · ${esc(u.muni)}</div></div><div style="display:flex;gap:10px;align-items:center"><span class="status st-${u.status==='Approved'?'Published':'Pending'}">${u.status}</span>${u.status==='Pending'?`<button class="btn sm" data-appr="${esc(u.email)}">Approve</button>`:''}</div></div>`).join('')}${pend.length?'':'<p class="muted" style="margin-top:8px">No accounts waiting for approval.</p>'}</section>`;
+  if(A().tab==='reference')body=`<section class="card"><h3>Stress types</h3><p class="muted" style="margin:4px 0 12px">One list feeds the table, the map and the filters.</p><div class="tw"><table><thead><tr><th scope="col">Code</th><th scope="col">Label</th><th scope="col">Badge</th></tr></thead><tbody>${STRESS.map(s=>`<tr><td class="mono">${s.code}</td><td>${esc(s.label)}</td><td>${badge(s.code)}</td></tr>`).join('')}</tbody></table></div><p class="muted" style="margin-top:12px;font-size:.86rem">Boundary files and farm practice text are managed here in the full build.</p></section>`;
+  return `<div class="tabs2">${tabs.map(t=>`<button class="btn ${S.acct.tab===t?'':'ghost'} sm" data-atab="${t}">${{reports:'Reports',users:'Users',reference:'Reference data'}[t]}</button>`).join('')}</div>${body}`}
+const A=()=>S.acct;
+VIEWS.account=()=>{
+  if(!S.user)return loginView();
+  const u=S.user;
+  return `<div class="page-head"><h2>My account</h2><p style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><span class="role-chip">${icon('user')}${esc(u.name)} · ${u.role==='DA'?'DA reviewer':u.role}${u.muni?' · '+esc(u.muni):''}</span><button class="btn ghost sm" data-act="logout">${icon('out')}Sign out</button></p></div>${u.role==='LGU'?lguView():daView()}`;
+};
+function login(email,pw){
+  const u=DB.users.find(x=>x.email.toLowerCase()===email.trim().toLowerCase());
+  if(!u||u.pw!==pw)return 'Email or password is incorrect.';
+  if(u.status!=='Approved')return 'This account is waiting for DA approval.';
+  S.user=u;S.acct.tab='reports';S.acct.err={};S.acct.msg='';return '';
+}
+function logEv(t){DB.log.push({at:today,text:t})}
+
+/* ---------- events ---------- */
+document.addEventListener('click',e=>{
+  const t=e.target.closest('button,a');if(!t)return;
+  const d=t.dataset;
+  if(d.gnav){setSlide(slide+ +d.gnav);return}
+  if(d.gs){setSlide(+d.gs);return}
+  if(d.gp){const H=HOME.prov;if(H.has(d.gp)){if(H.size>1)H.delete(d.gp)}else H.add(d.gp);render();return}
+  if(d.ct){const[k,v]=d.ct.split(':');HOME[k]=v;render();return}
+  if(d.grp){HOME.group=d.grp;render();return}
+  if(d.muni){S.data.open=+d.muni;render();return}
+  if(d.sort){const D=S.data;if(D.sort===d.sort)D.dir*=-1;else{D.sort=d.sort;D.dir=1}render();return}
+  if(d.page){S.data.page+=+d.page;render();return}
+  if(d.tab){S.prac.tab=d.tab;render();return}
+  if(d.atab){S.acct.tab=d.atab;render();return}
+  if(d.demo){$('#l-email').value=DEMO[d.demo];$('#l-pw').value='demo1234';return}
+  if(d.rm!==undefined){S.acct.draft.splice(+d.rm,1);render();return}
+  if(d.pub){publish(d.pub);return}
+  if(d.ret){ret(d.ret);return}
+  if(d.appr){const u=DB.users.find(x=>x.email===d.appr);u.status='Approved';logEv('Account for '+u.name+' ('+u.muni+') approved by '+S.user.name);toast('Account approved');render();return}
+  switch(d.act){
+   case'greset':HOME.prov=new Set(PROVS);HOME.f={stress:'',season:'',year:''};render();break;
+   case'closemuni':{const id=S.data.open;S.data.open=null;render();const b=document.querySelector('[data-muni="'+id+'"]');b&&b.focus();break}
+   case'csv':S.data.csv=!S.data.csv;render();break;
+   case'copycsv':{const txt=toCSV(filteredRows());(navigator.clipboard?navigator.clipboard.writeText(txt):Promise.reject()).then(()=>toast('CSV copied')).catch(()=>{const r=document.createRange();r.selectNodeContents($('#csvbox'));const s=getSelection();s.removeAllRanges();s.addRange(r);toast('Press copy to finish')})}break;
+   case'drawer':{const o=$('#layers').classList.toggle('open');t.setAttribute('aria-expanded',o)}break;
+   case'zin':case'zout':case'loc':S.lmapAct&&S.lmapAct(d.act);break;
+   case'closeinfo':S.map.sel=null;$('#info').innerHTML='';break;
+   case'topractice':S.prac={...S.prac,prov:d.prov,stress:d.stress,season:d.season,tab:'Seeds'};break;
+   case'goreg':S.acct.msg='';setTimeout(()=>{const f=$('#f-reg');if(f){f.scrollIntoView({behavior:'smooth',block:'center'});$('#r-name').focus({preventScroll:true})}},150);break;
+   case'logout':S.user=null;S.acct.msg='';render();break;
+   case'addrow':S.acct.draft.push({brgy:'',stress:'F',area:'',farmers:'',season:'Wet',year:2026});render();break;
+  }
+});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&S.data.open&&route()==='data'){S.data.open=null;render();return}if(!e.target.closest||!e.target.closest('.gal'))return;if(e.key==='ArrowLeft'){setSlide(slide-1)}else if(e.key==='ArrowRight'){setSlide(slide+1)}});
+document.addEventListener('change',e=>{
+  const t=e.target;
+  if(t.dataset.d!==undefined){S.acct.draft[+t.dataset.d][t.dataset.k]=t.value}
+  if(t.id&&t.id.startsWith('g-')){HOME.f[t.id.slice(2)]=t.value;render();const n=$('#'+t.id);n&&n.focus();return}
+  if(t.id==='d-file'){const f=t.files[0];S.acct.file=f?f.name:'';S.acct.fileOk=!f||(/\.(pdf|jpe?g|png)$/i.test(f.name)&&f.size<=5*1048576)}
+});
+document.addEventListener('submit',e=>{
+  e.preventDefault();const id=e.target.id;
+  if(id==='f-login'){const m=login($('#l-email').value,$('#l-pw').value);S.acct.err.login=m;render()}
+  if(id==='f-reg'){
+    const n=$('#r-name').value.trim(),em=$('#r-email').value.trim(),pw=$('#r-pw').value,mu=$('#r-muni').value;
+    S.acct.msg='';
+    if(!n||!/^\S+@\S+\.\S+$/.test(em))S.acct.err.reg='Enter your name and a valid email address.';
+    else if(pw.length<8)S.acct.err.reg='Use a password of 8 characters or more.';
+    else if(DB.users.some(u=>u.email.toLowerCase()===em.toLowerCase()))S.acct.err.reg='This email is already registered.';
+    else{DB.users.push({email:em,pw,name:n,role:'LGU',muni:mu,status:'Pending'});logEv('LGU registration from '+n+' ('+mu+') awaiting approval');S.acct.err.reg='';S.acct.msg='Registered. DA will approve your account before you can submit. Sign in as admin to approve it in this prototype.'}
+    render();
+  }
+  if(id==='f-rep'){
+    const A=S.acct,u=S.user,mid=muniByName(u.muni).id;let er='';
+    const ok=A.draft.every(d=>{if(!d.brgy){er='Choose a barangay in every row.';return false}
+      if(brgyById(+d.brgy).muni!==mid){er='You can only report for your own municipality.';return false}
+      if(!(+d.area>0)){er='Area must be a positive number.';return false}
+      if(!(+d.farmers>0)){er='Affected farmers must be a positive number.';return false}
+      const y=+d.year;if(!(y>=2000&&y<=2035)){er='Enter a year between 2000 and 2035.';return false}return true});
+    if(ok&&A.fileOk===false)er='The document must be a PDF, JPG or PNG up to 5 MB.';
+    if(ok&&!A.file)er='Attach a supporting document.';
+    A.err.rep=er;A.msg='';
+    if(!er){const id='R-'+String(DB.nextR++).padStart(3,'0');
+      DB.reports.push({id,muni:u.muni,by:u.name,at:today,status:'Submitted',items:A.draft.map(d=>({brgy:+d.brgy,stress:d.stress,area:+d.area,farmers:Math.round(+d.farmers),season:d.season,year:+d.year})),files:[A.file],notes:'',reviewer:null,review_notes:''});
+      logEv(id+' submitted by '+u.muni+' LGU');A.draft=[{brgy:'',stress:'F',area:'',farmers:'',season:'Wet',year:2026}];A.file='';A.fileOk=undefined;A.msg=id+' submitted. DA will review it.';toast('Report submitted')}
+    render();
+  }
+});
+function publish(id){
+  const r=DB.reports.find(x=>x.id===id);r.status='Published';r.reviewer=S.user.name;r.review_notes=r.review_notes||'';
+  r.items.forEach(i=>DB.records.push({id:DB.nextRec++,brgy:i.brgy,stress:i.stress,area:i.area,farmers:i.farmers||0,season:i.season,year:i.year,status:'Published',report:id}));
+  logEv(id+' published by '+S.user.name+' · '+r.items.length+' record(s) added');toast(id+' published. It now shows in Adverse Data and the map.');render();
+}
+function ret(id){
+  const note=$('#n-'+id).value.trim();
+  if(!note){$('#e-'+id).textContent='Add a note so the LGU knows what to fix.';return}
+  const r=DB.reports.find(x=>x.id===id);r.status='Returned';r.reviewer=S.user.name;r.review_notes=note;
+  logEv(id+' returned to '+r.muni+' LGU by '+S.user.name);toast(id+' returned');render();
+}
+/* hero parallax: the photo drifts slower than the page as you scroll */
+(function(){
+  if(matchMedia('(prefers-reduced-motion: reduce)').matches)return;
+  let tick=false;
+  function upd(){tick=false;const h=document.querySelector('.hero');if(!h)return;
+    const r=h.getBoundingClientRect(),lim=r.height*.2,py=(innerHeight/2-(r.top+r.height/2))*.22;
+    h.style.setProperty('--py',Math.max(-lim,Math.min(lim,py)).toFixed(1)+'px')}
+  addEventListener('scroll',()=>{if(!tick){tick=true;requestAnimationFrame(upd)}},{passive:true});
+  addEventListener('resize',upd);addEventListener('hashchange',()=>setTimeout(upd,0));setTimeout(upd,0);
+})();
+document.addEventListener('keydown',e=>{if(!e.target.closest||!e.target.closest('#gallery'))return;if(e.key==='ArrowLeft'){galGo('prev');$('#gallery').focus();e.preventDefault()}if(e.key==='ArrowRight'){galGo('next');$('#gallery').focus();e.preventDefault()}});
+render();
+})();
+</script>
+
+</body></html>
