@@ -86,6 +86,9 @@ group by st.code, st.label, st.color, st.sort_order;
 create or replace view public.v_home_summary
 with (security_invoker = true)
 as
+with province_totals as (
+  select * from public.v_province_totals
+)
 select
   case
     when count(*) filter (where physical_rice_area_ha is null) > 0 then null
@@ -97,8 +100,12 @@ select
   end as total_farmers,
   coalesce(sum(total_affected_area_ha), 0::numeric) as total_affected_area_ha,
   coalesce(sum(affected_farmers), 0::numeric) as affected_farmers,
-  coalesce(sum(record_count), 0)::bigint as record_count
-from public.v_province_totals;
+  coalesce(sum(record_count), 0)::bigint as record_count,
+  case
+    when count(*) filter (where favorable_area_ha is null) > 0 then null
+    else coalesce(sum(favorable_area_ha), 0::numeric)
+  end as favorable_area_ha
+from province_totals;
 
 grant select on public.v_province_totals to anon, authenticated;
 grant select on public.v_stress_type_totals to anon, authenticated;

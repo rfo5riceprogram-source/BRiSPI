@@ -4,6 +4,7 @@ type ChartType = 'bar' | 'hbar' | 'line' | 'donut' | 'pie';
 
 interface HomeSummary {
     physical_rice_area_ha: number | null;
+    favorable_area_ha: number | null;
     total_farmers: number | null;
     total_affected_area_ha: number;
     affected_farmers: number;
@@ -53,26 +54,32 @@ interface ChartItem {
     short?: string;
 }
 
-const chartTypes: { type: ChartType; label: string }[] = [
-    { type: 'bar', label: 'Bar' },
-    { type: 'hbar', label: 'Horizontal' },
-    { type: 'line', label: 'Line' },
-    { type: 'donut', label: 'Donut' },
-    { type: 'pie', label: 'Pie' },
-];
-
 const provinceColors = ['#1e7a4d', '#d98a1c', '#3d8fd1', '#8a5fc4', '#c0563f', '#5a8a2e'];
-const chartModes: Record<string, ChartType> = { physical: 'bar', affected: 'hbar', farmers: 'bar' };
 
 export function renderPage(title: string): string {
     if (title === 'Home') {
         return `
-            <section class="page-head">
+            <section class="hero" aria-label="Bicol rice landscape">
+                <img class="hero-image" src="/images/hero-section-image.jfif" alt="Rice-growing landscape in Bicol" fetchpriority="high" />
                 <h1>Bicol Rice Stress Prone Information Hub</h1>
             </section>
             <div id="home-content" aria-live="polite">
                 <div class="card" role="status"><p class="muted">Loading home data...</p></div>
             </div>`;
+    }
+
+    if (title === 'Interactive Map') {
+        return `
+            <section class="map-page">
+                <div class="page-head"><h1>Interactive Map</h1></div>
+                <div class="atlas-map">
+                    <iframe
+                        src="https://app.atlas.co/shared/ZT79CNirH2B9GdV4NlMY?interfaceId=PmIew1XYzx5PVBWXL6FE"
+                        title="Bicol Rice Stress Hub interactive map"
+                        allow="fullscreen; clipboard-write"
+                        loading="lazy"></iframe>
+                </div>
+            </section>`;
     }
 
     return `<section class="page-head"><h1>${escapeHtml(title)}</h1></section>`;
@@ -96,20 +103,6 @@ export function mountPage(title: string): void {
     container.addEventListener('click', (event: MouseEvent) => {
         const target = event.target;
         if (!(target instanceof Element)) {
-            return;
-        }
-
-        const chartButton = target.closest<HTMLButtonElement>('[data-chart-key][data-chart-type]');
-        if (chartButton) {
-            const key = chartButton.dataset.chartKey;
-            const type = chartButton.dataset.chartType as ChartType;
-            if (key && chartTypes.some((item) => item.type === type)) {
-                chartModes[key] = type;
-                paint();
-                container.querySelector<HTMLButtonElement>(
-                    `[data-chart-key="${key}"][data-chart-type="${type}"]`,
-                )?.focus();
-            }
             return;
         }
 
@@ -173,7 +166,9 @@ export function mountPage(title: string): void {
             }
 
             homeData = { summary, provinces, stressTypes };
-            if (!provinces.some((province) => province.province_pcode === landProvince)) {
+            if (landProvince === '') {
+                landProvince = 'all';
+            } else if (landProvince !== 'all' && !provinces.some((province) => province.province_pcode === landProvince)) {
                 landProvince = provinces.find((province) => province.physical_rice_area_ha !== null)?.province_pcode ?? provinces[0].province_pcode;
             }
             paint();
@@ -196,10 +191,6 @@ export function mountPage(title: string): void {
 
 function renderHome(data: HomeData, affectedGroup: 'province' | 'stress', landProvince: string): string {
     const { summary, provinces, stressTypes } = data;
-    const provinceAreaItems = provinces.flatMap((province, index) => {
-        const value = finiteValue(province.physical_rice_area_ha);
-        return value === null ? [] : [{ label: province.province_name, short: shortProvince(province.province_name), value, color: provinceColors[index % provinceColors.length] }];
-    });
     const affectedItems = affectedGroup === 'province'
         ? provinces.map((province, index) => ({
             label: province.province_name,
@@ -209,7 +200,6 @@ function renderHome(data: HomeData, affectedGroup: 'province' | 'stress', landPr
         }))
         : stressTypes.map((stress) => ({
             label: stress.stress_label,
-            short: stress.stress_code,
             value: Number(stress.total_area_ha),
             color: stress.stress_color,
         }));
@@ -219,21 +209,19 @@ function renderHome(data: HomeData, affectedGroup: 'province' | 'stress', landPr
     });
 
     return `
-        <section aria-label="Rice area at a glance" style="margin-bottom:28px">
+        <section aria-label="Rice Stress Exposure Across Bicol Provinces" style="margin-bottom:28px">
             <div class="glance-head">
-                <div><h2>Rice area at a glance</h2><p>Published stress records and province reference totals.</p></div>
+            <div><h2>Rice Stress Exposure Across Bicol Provinces</h2><p>Published stress records and province reference totals.</p></div>
             </div>
             <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(min(100%,340px),1fr))">
-                ${renderMetricCard(
-        'Total physical rice area',
-        summary.physical_rice_area_ha,
-        summary.physical_rice_area_ha === null
-            ? 'Province physical-area values have not been loaded.'
-            : 'hectares across reporting provinces',
-        'physical',
-        provinceAreaItems,
-        'ha',
-    )}
+                <div class="card gcard">
+                    <div class="top">
+                        <span class="lbl">Province comparison</span>
+                        <h3>Physical Rice Area vs Rice Stress-Prone Area</h3>
+                        <span class="muted">Hectares by province</span>
+                    </div>
+                    ${renderAreaComparison(provinces)}
+                </div>
                 <div class="card gcard">
                     <div class="top">
                         <span class="lbl">Total affected area</span>
@@ -244,20 +232,60 @@ function renderHome(data: HomeData, affectedGroup: 'province' | 'stress', landPr
                         <button type="button" data-affected-group="province" aria-pressed="${affectedGroup === 'province'}">By province</button>
                         <button type="button" data-affected-group="stress" aria-pressed="${affectedGroup === 'stress'}">By stress type</button>
                     </div>
-                    ${renderChartControls('affected')}
-                    ${renderChart(chartModes.affected, affectedItems, 'ha', 'Affected area')}
+                    ${renderChart('hbar', affectedItems, 'ha', 'Affected area')}
                 </div>
-                ${renderMetricCard('Affected farmers', summary.affected_farmers, 'farmers represented in published stress records, by province', 'farmers', farmerItems, 'farmers')}
+                ${renderMetricCard('Affected farmers', summary.affected_farmers, 'farmers represented in published stress records, by province', farmerItems, 'farmers')}
             </div>
         </section>
-        ${renderLandCondition(provinces, landProvince)}`;
+        ${renderLandCondition(data, landProvince)}`;
+}
+
+function renderAreaComparison(provinces: ProvinceTotal[]): string {
+    const rows = provinces.flatMap((province) => {
+        const physicalArea = finiteValue(province.physical_rice_area_ha);
+        return physicalArea === null ? [] : [{
+            name: province.province_name,
+            physicalArea,
+            affectedArea: Number(province.total_affected_area_ha),
+        }];
+    });
+
+    if (rows.length === 0) {
+        return '<p class="muted" role="status">Physical-area values are not available for comparison.</p>';
+    }
+
+    const width = 420;
+    const left = 132;
+    const right = 52;
+    const top = 12;
+    const rowHeight = 48;
+    const bottom = 28;
+    const height = top + rows.length * rowHeight + bottom;
+    const plotWidth = width - left - right;
+    const maximum = niceMaximum(Math.max(...rows.flatMap((row) => [row.physicalArea, row.affectedArea])));
+    const scale = (value: number): number => value / maximum * plotWidth;
+    let grid = '';
+
+    for (let tick = 0; tick <= 4; tick += 1) {
+        const value = maximum * tick / 4;
+        const x = left + scale(value);
+        grid += `<line class="grid" x1="${x}" x2="${x}" y1="${top - 4}" y2="${top + rows.length * rowHeight - 5}"/><text x="${x}" y="${height - 5}" text-anchor="middle">${compactNumber(value)}</text>`;
+    }
+
+    const bars = rows.map((row, index) => {
+        const y = top + index * rowHeight;
+        const physicalWidth = scale(row.physicalArea);
+        const affectedWidth = scale(row.affectedArea);
+        return `<text x="${left - 8}" y="${y + 17}" text-anchor="end">${escapeHtml(shortProvince(row.name))}</text><rect x="${left}" y="${y + 3}" width="${physicalWidth}" height="12" rx="3" fill="#2f8f4e"><title>${escapeHtml(row.name)} physical rice area: ${formatNumber(row.physicalArea)} ha</title></rect><text class="v" x="${left + physicalWidth + 5}" y="${y + 13}">${compactNumber(row.physicalArea)}</text><rect x="${left}" y="${y + 21}" width="${affectedWidth}" height="12" rx="3" fill="#d9731a"><title>${escapeHtml(row.name)} stress-prone area: ${formatNumber(row.affectedArea)} ha</title></rect><text class="v" x="${left + affectedWidth + 5}" y="${y + 31}">${compactNumber(row.affectedArea)}</text>`;
+    }).join('');
+
+    return `<div class="keyrow"><span><i style="background:#2f8f4e"></i>Physical rice area</span><span><i style="background:#d9731a"></i>Stress-prone area</span></div><svg class="chart" viewBox="0 0 ${width} ${height}" role="img" aria-label="Physical rice area compared with stress-prone area by province, in hectares">${grid}${bars}</svg>`;
 }
 
 function renderMetricCard(
     label: string,
     total: number | null,
     description: string,
-    chartKey: string,
     items: ChartItem[],
     unit: string,
 ): string {
@@ -268,15 +296,8 @@ function renderMetricCard(
                 <span class="big">${total === null ? 'Unavailable' : formatNumber(total)}</span>
                 <span class="muted">${escapeHtml(description)}</span>
             </div>
-            ${items.length > 0 ? renderChartControls(chartKey) : ''}
-            ${renderChart(chartModes[chartKey], items, unit, label)}
+            ${renderChart('hbar', items, unit, label)}
         </div>`;
-}
-
-function renderChartControls(chartKey: string): string {
-    return `<div class="seg" role="group" aria-label="${escapeHtml(chartKey)} chart type">${chartTypes.map(({ type, label }) => `
-        <button type="button" data-chart-key="${chartKey}" data-chart-type="${type}" aria-pressed="${chartModes[chartKey] === type}">${label}</button>`).join('')}
-    </div>`;
 }
 
 function renderChart(type: ChartType, sourceItems: ChartItem[], unit: string, description: string): string {
@@ -310,6 +331,22 @@ function renderChart(type: ChartType, sourceItems: ChartItem[], unit: string, de
 
     const max = niceMaximum(Math.max(...items.map((item) => item.value)));
     if (type === 'hbar') {
+        if (items.some((item) => (item.short ?? item.label).length > 18)) {
+            const width = 360;
+            const barWidth = 286;
+            let currentY = 4;
+            const rows = items.map((item) => {
+                const lines = wrapLabel(item.short ?? item.label, 42);
+                const label = lines.map((line, index) => `<tspan x="0" dy="${index === 0 ? 0 : 12}">${index === 0 ? '' : ' '}${escapeHtml(line)}</tspan>`).join('');
+                const barY = currentY + lines.length * 12 + 3;
+                const valueWidth = item.value / max * barWidth;
+                const row = `<text x="0" y="${currentY + 9}">${label}</text><rect x="0" y="${barY}" width="${valueWidth}" height="9" rx="4" fill="${escapeHtml(item.color)}"><title>${escapeHtml(item.label)}: ${formatNumber(item.value)} ${escapeHtml(unit)}</title></rect><text class="v" x="${valueWidth + 6}" y="${barY + 8}">${compactNumber(item.value)}</text>`;
+                currentY = barY + 19;
+                return row;
+            }).join('');
+            return `<svg class="chart" viewBox="0 0 ${width} ${currentY}" role="img" aria-label="${escapeHtml(description)} by group">${rows}</svg>`;
+        }
+
         const rowHeight = 30;
         const height = items.length * rowHeight + 8;
         const labelWidth = 118;
@@ -356,56 +393,62 @@ function renderChart(type: ChartType, sourceItems: ChartItem[], unit: string, de
     return `<svg class="chart" viewBox="0 0 ${width} ${height}" role="img" aria-label="${escapeHtml(description)} by group">${grid}${marks}${labels}</svg>`;
 }
 
-function renderLandCondition(provinces: ProvinceTotal[], selectedCode: string): string {
-    const province = provinces.find((item) => item.province_pcode === selectedCode) ?? provinces[0];
-    const physicalArea = finiteValue(province.physical_rice_area_ha);
-    const affectedArea = Number(province.total_affected_area_ha);
-    const hasValidBasis = physicalArea !== null && physicalArea > 0 && province.favorable_area_ha !== null;
-    const options = provinces.map((item) => `<option value="${escapeHtml(item.province_pcode)}"${item.province_pcode === province.province_pcode ? ' selected' : ''}>${escapeHtml(item.province_name)}</option>`).join('');
+function renderLandCondition(data: HomeData, selectedCode: string): string {
+    const isAllProvinces = selectedCode === 'all';
+    const province = data.provinces.find((item) => item.province_pcode === selectedCode) ?? data.provinces[0];
+    const provinceName = isAllProvinces ? 'All provinces' : province.province_name;
+    const physicalArea = finiteValue(isAllProvinces ? data.summary.physical_rice_area_ha : province.physical_rice_area_ha);
+    const affectedArea = Number(isAllProvinces ? data.summary.total_affected_area_ha : province.total_affected_area_ha);
+    const hasValidBasis = physicalArea !== null && physicalArea > 0 && affectedArea >= 0 && affectedArea <= physicalArea;
+    const stressBreakdown = isAllProvinces
+        ? data.stressTypes.map((stress) => ({
+            label: stress.stress_label,
+            area_ha: stress.total_area_ha,
+            color: stress.stress_color,
+        }))
+        : province.stress_breakdown;
+    const options = [
+        `<option value="all"${isAllProvinces ? ' selected' : ''}>All provinces</option>`,
+        ...data.provinces.map((item) => `<option value="${escapeHtml(item.province_pcode)}"${item.province_pcode === selectedCode ? ' selected' : ''}>${escapeHtml(item.province_name)}</option>`),
+    ].join('');
 
-    let charts: string;
-    if (!hasValidBasis) {
-        const reason = physicalArea === null
-            ? 'Physical rice area is not available for this province.'
-            : physicalArea <= 0
-                ? 'Physical rice area must be greater than zero to calculate land-condition shares.'
-                : 'Published stress area exceeds the reported physical rice area; percentage breakdown is unavailable.';
-        charts = `<p class="muted" role="status">${escapeHtml(reason)}</p>`;
-    } else {
-        const favorableArea = Number(province.favorable_area_ha);
-        const conditions: ChartItem[] = [
-            { label: 'Favorable', value: favorableArea, color: '#2f8f4e' },
-            { label: 'Unfavorable', value: affectedArea, color: '#5b6b7a' },
-        ];
-        const stressItems = province.stress_breakdown.map((stress) => ({
-            label: stress.label,
-            value: Number(stress.area_ha),
-            color: stress.color,
-        }));
-        charts = `
-            <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr))">
-                <div>
-                    <h3>Favorable and unfavorable</h3>
-                    <p class="muted" style="margin:6px 0 12px">Share of ${escapeHtml(province.province_name)} rice area</p>
-                    ${renderChart('pie', conditions, 'ha', 'Land condition')}
-                </div>
-                <div>
-                    <h3>Unfavorable area by stress type</h3>
-                    <p class="muted" style="margin:6px 0 12px">Published affected hectares by category</p>
-                    ${renderChart('donut', stressItems, 'ha', 'Unfavorable area by stress type')}
-                </div>
-            </div>`;
-    }
+    const reason = physicalArea === null
+        ? 'Physical rice area is not available for this selection.'
+        : physicalArea <= 0
+            ? 'Physical rice area must be greater than zero to calculate land-condition shares.'
+            : 'Published stress area exceeds the reported physical rice area; percentage breakdown is unavailable.';
+    const conditions: ChartItem[] = [
+        { label: 'Remaining physical area', value: physicalArea === null ? 0 : physicalArea - affectedArea, color: '#2f8f4e' },
+        { label: 'Affected area', value: affectedArea, color: '#5b6b7a' },
+    ];
+    const stressItems = stressBreakdown.map((stress) => ({
+        label: stress.label,
+        value: Number(stress.area_ha),
+        color: stress.color,
+    }));
+    const charts = `
+        <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr))">
+            <div>
+                <h3>Physical rice area split by affected area</h3>
+                <p class="muted" style="margin:6px 0 12px">${hasValidBasis ? `Affected and remaining hectares in ${escapeHtml(provinceName)}` : escapeHtml(reason)}</p>
+                ${hasValidBasis ? renderChart('pie', conditions, 'ha', 'Physical rice area split by affected area') : '<p class="muted" role="status">Land-condition shares are unavailable.</p>'}
+            </div>
+            <div>
+                <h3>Unfavorable area by stress type</h3>
+                <p class="muted" style="margin:6px 0 12px">Published affected hectares by category</p>
+                ${renderChart('donut', stressItems, 'ha', 'Unfavorable area by stress type')}
+            </div>
+        </div>`;
 
     return `
-        <section aria-label="Land condition in ${escapeHtml(province.province_name)}" style="margin-bottom:28px">
+        <section aria-label="Land condition in ${escapeHtml(provinceName)}" style="margin-bottom:28px">
             <div class="glance-head">
                 <div><h2>Land condition</h2><p>Rice area shares with the unfavorable portion broken down by stress type.</p></div>
                 <div class="field"><label for="land-province">Province</label><select id="land-province" name="land-province">${options}</select></div>
             </div>
             <div class="card ppwrap">
                 <div class="ppdetail" aria-live="polite">
-                    <span class="badge"><i style="background:#2f8f4e"></i>${escapeHtml(province.province_name)}</span>
+                    <span class="badge"><i style="background:#2f8f4e"></i>${escapeHtml(provinceName)}</span>
                     <span>Physical rice area</span><b class="mono">${physicalArea === null ? 'Unavailable' : `${formatNumber(physicalArea)} ha`}</b>
                     <span>Published affected area</span><b class="mono">${formatNumber(affectedArea)} ha</b>
                 </div>
@@ -416,6 +459,26 @@ function renderLandCondition(provinces: ProvinceTotal[], selectedCode: string): 
 
 function pointOnCircle(centerX: number, centerY: number, radius: number, angle: number): [number, number] {
     return [centerX + Math.cos(angle) * radius, centerY + Math.sin(angle) * radius];
+}
+
+function wrapLabel(label: string, maxCharacters: number): string[] {
+    const lines: string[] = [];
+    let currentLine = '';
+
+    for (const word of label.split(/\s+/)) {
+        const candidate = currentLine ? `${currentLine} ${word}` : word;
+        if (currentLine && candidate.length > maxCharacters) {
+            lines.push(currentLine);
+            currentLine = word;
+        } else {
+            currentLine = candidate;
+        }
+    }
+
+    if (currentLine) {
+        lines.push(currentLine);
+    }
+    return lines;
 }
 
 function niceMaximum(value: number): number {
